@@ -3005,5 +3005,8 @@ public static const ITS_EVERY_DAY:int                                           
 public static const LOW_STANDARDS_FOR_ALL:int                                       = 2997;
 public static const HYPER_HAPPY:int                                                 = 2998;
 public static const UNKNOWN_FLAG_NUMBER_02999:int                                   = 2999; // ------------------------- Jojo Debug Flag?
+// Hellspawn flags - thrown here for the time being
+public static const _modPLAYERCAMEBEFORERIDING:int                                  = 3000;
+public static const HELSPAWN_HADSEX:int                                             = 3001;
 	}    
 }
