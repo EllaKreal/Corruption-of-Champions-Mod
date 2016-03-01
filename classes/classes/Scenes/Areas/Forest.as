@@ -34,7 +34,7 @@ package classes.Scenes.Areas
 		{
 			clearOutput();
 			//Increment deepwoods exploration counter.
-			player.addStatusValue(StatusAffects.ExploredDeepwoods, 1, 1);
+			player.addStatusValue(StatusEffects.ExploredDeepwoods, 1, 1);
 			
 			var choice:Array = [];
 			var select:int;
@@ -49,12 +49,11 @@ package classes.Scenes.Areas
 			if (flags[kFLAGS.CAMP_CABIN_PROGRESS] >= 4 && flags[kFLAGS.CAMP_CABIN_WOOD_RESOURCES] < 100 && rand(2) == 0) choice[choice.length] = 6; //Gather woods
 			
 			//Every tenth exploration finds a pumpkin if eligible!
-			if (player.statusAffectv1(StatusAffects.ExploredDeepwoods) % 10 == 0 && isHalloween()) {
+			if (player.statusEffectv1(StatusEffects.ExploredDeepwoods) % 10 == 0 && isHalloween()) {
 				//If Fera isn't free yet...
 				if (player.findPerk(PerkLib.FerasBoonBreedingBitch) < 0 && player.findPerk(PerkLib.FerasBoonAlpha) < 0) {
 					if (date.fullYear > flags[kFLAGS.PUMPKIN_FUCK_YEAR_DONE]) {
-						awardAchievement("Pump-kin-kin-kin", kACHIEVEMENTS.HOLIDAY_HALLOWEEN_I);
-						kGAMECLASS.pumpkinFuckEncounter();
+						kGAMECLASS.fera.pumpkinFuckEncounter();
 						return;
 					}
 				}
@@ -62,7 +61,7 @@ package classes.Scenes.Areas
 				else {
 					if (flags[kFLAGS.FERAS_TRAP_SPRUNG_YEAR] == 0) {
 						if (date.fullYear > flags[kFLAGS.FERAS_GLADE_EXPLORED_YEAR]) {
-							kGAMECLASS.feraSceneTwoIntroduction();
+							kGAMECLASS.fera.feraSceneTwoIntroduction();
 							return;
 						}
 					}
@@ -74,7 +73,7 @@ package classes.Scenes.Areas
 				return;
 			}
 			//Every 5th exploration encounters d2 if hasnt been met yet and factory done
-			if (flags[kFLAGS.DISCOVERED_DUNGEON_2_ZETAZ] == 0 && player.statusAffectv1(StatusAffects.ExploredDeepwoods) % 5 == 0 && flags[kFLAGS.FACTORY_SHUTDOWN] > 0) {
+			if (flags[kFLAGS.DISCOVERED_DUNGEON_2_ZETAZ] == 0 && player.statusEffectv1(StatusEffects.ExploredDeepwoods) % 5 == 0 && flags[kFLAGS.FACTORY_SHUTDOWN] > 0) {
 				kGAMECLASS.dungeons.enterDeepCave();
 				return;
 			}
@@ -155,8 +154,8 @@ package classes.Scenes.Areas
 			
 			//Build choice list!
 			choice[choice.length] = 0; //General Goblin and Imp Encounters
-			if ((player.findStatusAffect(StatusAffects.PureCampJojo) < 0 && !camp.campCorruptJojo()) && flags[kFLAGS.JOJO_DEAD_OR_GONE] <= 0 && (kGAMECLASS.monk < 2 || rand(2) == 0)) choice[choice.length] = 1; //Jojo
-			if ((player.findStatusAffect(StatusAffects.PureCampJojo) < 0 && !camp.campCorruptJojo()) && flags[kFLAGS.JOJO_DEAD_OR_GONE] <= 0 && player.findPerk(PerkLib.PiercedFurrite) >= 0 && rand(5) == 0 && (player.cor > 25 || kGAMECLASS.monk > 0)) choice[choice.length] = 1; //Extra chance of Jojo encounter.
+			if ((player.findStatusEffect(StatusEffects.PureCampJojo) < 0 && !camp.campCorruptJojo()) && flags[kFLAGS.JOJO_DEAD_OR_GONE] <= 0 && (kGAMECLASS.monk < 2 || rand(2) == 0)) choice[choice.length] = 1; //Jojo
+			if ((player.findStatusEffect(StatusEffects.PureCampJojo) < 0 && !camp.campCorruptJojo()) && flags[kFLAGS.JOJO_DEAD_OR_GONE] <= 0 && player.findPerk(PerkLib.PiercedFurrite) >= 0 && rand(5) == 0 && (player.cor > 25 || kGAMECLASS.monk > 0)) choice[choice.length] = 1; //Extra chance of Jojo encounter.
 			if (player.level >= 2) choice[choice.length] = 2; //Tentacle Beast
 			if (flags[kFLAGS.CORRUPTED_GLADES_DESTROYED] < 100 && rand(100) >= Math.round(flags[kFLAGS.CORRUPTED_GLADES_DESTROYED] * 0.75)) choice[choice.length] = 3; //Corrupted Glade
 			choice[choice.length] = 4; //Trip on a root
@@ -170,8 +169,8 @@ package classes.Scenes.Areas
 				return;
 			}
 			//Chance to discover deepwoods
-			if ((player.exploredForest >= 20) && player.findStatusAffect(StatusAffects.ExploredDeepwoods) < 0) {
-				player.createStatusAffect(StatusAffects.ExploredDeepwoods, 0, 0, 0, 0);
+			if ((player.exploredForest >= 20) && player.findStatusEffect(StatusEffects.ExploredDeepwoods) < 0) {
+				player.createStatusEffect(StatusEffects.ExploredDeepwoods, 0, 0, 0, 0);
 				outputText("After exploring the forest so many times, you decide to really push it, and plunge deeper and deeper into the woods.  The further you go the darker it gets, but you courageously press on.  The plant-life changes too, and you spot more and more lichens and fungi, many of which are luminescent.  Finally, a wall of tree-trunks as wide as houses blocks your progress.  There is a knot-hole like opening in the center, and a small sign marking it as the entrance to the 'Deepwoods'.  You don't press on for now, but you could easily find your way back to explore the Deepwoods.\n\n<b>Deepwoods exploration unlocked!</b>", true);
 				doNext(camp.returnToCampUseOneHour);
 				return;
@@ -189,7 +188,7 @@ package classes.Scenes.Areas
 				return;
 			}
 			//Marble randomness
-			if (player.exploredForest % 50 == 0 && player.exploredForest > 0 && player.findStatusAffect(StatusAffects.MarbleRapeAttempted) < 0 && player.findStatusAffect(StatusAffects.NoMoreMarble) < 0 && player.findStatusAffect(StatusAffects.Marble) >= 0 && flags[kFLAGS.MARBLE_WARNING] == 0) {
+			if (player.exploredForest % 50 == 0 && player.exploredForest > 0 && player.findStatusEffect(StatusEffects.MarbleRapeAttempted) < 0 && player.findStatusEffect(StatusEffects.NoMoreMarble) < 0 && player.findStatusEffect(StatusEffects.Marble) >= 0 && flags[kFLAGS.MARBLE_WARNING] == 0) {
 				//can be triggered one time after Marble has been met, but before the addiction quest starts.
 				clearOutput();
 				outputText("While you're moving through the trees, you suddenly hear yelling ahead, followed by a crash and a scream as an imp comes flying at high speed through the foliage and impacts a nearby tree.  The small demon slowly slides down the tree before landing at the base, still.  A moment later, a familiar-looking cow-girl steps through the bushes brandishing a huge two-handed hammer with an angry look on her face.");
@@ -219,7 +218,7 @@ package classes.Scenes.Areas
 					break;
 				case 1: //Jojo
 					clearOutput();
-					if (kGAMECLASS.monk == 0 && player.findStatusAffect(StatusAffects.PureCampJojo) < 0) 
+					if (kGAMECLASS.monk == 0 && player.findStatusEffect(StatusEffects.PureCampJojo) < 0) 
 					{	
 						if (player.cor < 25)
 						{
@@ -300,9 +299,9 @@ package classes.Scenes.Areas
 					}
 					else {
 						outputText("As you wander in the forest, you keep ", false);
-						if (player.gender == 1) outputText("stroking your half-erect " + multiCockDescriptLight() + " as you daydream about fucking all kinds of women, from weeping tight virgins to lustful succubi with gaping, drooling fuck-holes.", false);
-						if (player.gender == 2) outputText("idly toying with your " + vaginaDescript(0) + " as you daydream about getting fucked by all kinds of monstrous cocks, from minotaurs' thick, smelly dongs to demons' towering, bumpy pleasure-rods.", false);
-						if (player.gender == 3) outputText("stroking alternatively your " + multiCockDescriptLight() + " and your " + vaginaDescript(0) + " as you daydream about fucking all kinds of women, from weeping tight virgins to lustful succubi with gaping, drooling fuck-holes, before, or while, getting fucked by various monstrous cocks, from minotaurs' thick, smelly dongs to demons' towering, bumpy pleasure-rods.", false);
+						if (player.gender == 1) outputText("stroking your half-erect " + player.multiCockDescriptLight() + " as you daydream about fucking all kinds of women, from weeping tight virgins to lustful succubi with gaping, drooling fuck-holes.", false);
+						if (player.gender == 2) outputText("idly toying with your " + player.vaginaDescript(0) + " as you daydream about getting fucked by all kinds of monstrous cocks, from minotaurs' thick, smelly dongs to demons' towering, bumpy pleasure-rods.", false);
+						if (player.gender == 3) outputText("stroking alternatively your " + player.multiCockDescriptLight() + " and your " + player.vaginaDescript(0) + " as you daydream about fucking all kinds of women, from weeping tight virgins to lustful succubi with gaping, drooling fuck-holes, before, or while, getting fucked by various monstrous cocks, from minotaurs' thick, smelly dongs to demons' towering, bumpy pleasure-rods.", false);
 						if (player.gender == 0) outputText("daydreaming about sex-demons with huge sexual attributes, and how you could please them.", false);
 						outputText("", false);
 						dynStats("tou", .5, "lib", .25, "lus", player.lib / 5);
@@ -322,7 +321,7 @@ package classes.Scenes.Areas
 			outputText("Walking along the ", false);
 			if (lake) outputText("grassy and muddy shores of the lake", false);
 			else outputText("various paths of the forest", false);
-			outputText(", you find yourself increasingly impeded by the bulk of your " + cockDescript(x) + " dragging along the ", false);
+			outputText(", you find yourself increasingly impeded by the bulk of your " + player.cockDescript(x) + " dragging along the ", false);
 			if (lake) outputText("wet ground behind you.", false);
 			else outputText("earth behind you.", false);
 			if (player.cocks.length == 1) {
@@ -330,29 +329,29 @@ package classes.Scenes.Areas
 				else outputText("  As it drags across the grass, twigs, and exposed tree roots, the sensation forces you to imagine the fingers of a giant hand sliding along the head of your " + Appearance.cockNoun(player.cocks[x].cockType) + ", gently jerking it off.", false);
 			}
 			else if (player.cocks.length >= 2) {
-				if (lake) outputText("  With all of your " + multiCockDescriptLight() + " dragging through the mud, they begin feeling as if the lips of " + num2Text(player.cockTotal()) + " different cunts were slobbering over each one.", false);
-				else outputText("  With all of your " + multiCockDescriptLight() + " dragging across the grass, twigs, and exposed tree roots, they begin feeling as if the rough fingers of " + num2Text(player.cockTotal()) + " different monstrous hands were sliding over each shaft, gently jerking them off.", false);
+				if (lake) outputText("  With all of your " + player.multiCockDescriptLight() + " dragging through the mud, they begin feeling as if the lips of " + num2Text(player.cockTotal()) + " different cunts were slobbering over each one.", false);
+				else outputText("  With all of your " + player.multiCockDescriptLight() + " dragging across the grass, twigs, and exposed tree roots, they begin feeling as if the rough fingers of " + num2Text(player.cockTotal()) + " different monstrous hands were sliding over each shaft, gently jerking them off.", false);
 			}
 			outputText("\n\n", false);
 
 			//PARAGRAPH 2
 			//FOR NON-CENTAURS]
 			if (!player.isTaur()) {
-				outputText("The impending erection can't seem to be stopped.  Your sexual frustration forces stiffness into your " + multiCockDescriptLight() + ", which forces your torso to the ground.  Normally your erection would merely raise itself skyward, but your genitals have grown too large and heavy for your " + hipDescript() + " to hold them aloft.  Instead, you feel your body forcibly pivoting at the hips until your torso is compelled to rest face down atop your " + multiCockDescriptLight() + ".", false);
+				outputText("The impending erection can't seem to be stopped.  Your sexual frustration forces stiffness into your " + player.multiCockDescriptLight() + ", which forces your torso to the ground.  Normally your erection would merely raise itself skyward, but your genitals have grown too large and heavy for your " + player.hipDescript() + " to hold them aloft.  Instead, you feel your body forcibly pivoting at the hips until your torso is compelled to rest face down atop your " + player.multiCockDescriptLight() + ".", false);
 				//IF CHARACTER HAS GIANT BREASTS ADD SENTENCE
 				if (player.biggestTitSize() >= 35) {
-					if (lake) outputText("  Your " + chestDesc() + " hang lewdly off your torso to rest in the lakeside mud, covering much of the ground to either side of you.  Their immense weight anchors your body, further preventing your torso from lifting itself up.  Mud cakes against their undersides and coats your " + nippleDescript(0) + "s.", false);
-					else outputText("  Your " + chestDesc() + " hang lewdly off your torso to rest on the twings and dirt, covering up much of the ground to either side of you.  Their immense weight anchors your body, further preventing your torso from lifting itself up.  The rough texture of the bark on various tree roots teases your " + nippleDescript(0) + "s mercilessly.", false);
+					if (lake) outputText("  Your " + player.chestDesc() + " hang lewdly off your torso to rest in the lakeside mud, covering much of the ground to either side of you.  Their immense weight anchors your body, further preventing your torso from lifting itself up.  Mud cakes against their undersides and coats your " + player.nippleDescript(0) + "s.", false);
+					else outputText("  Your " + player.chestDesc() + " hang lewdly off your torso to rest on the twings and dirt, covering up much of the ground to either side of you.  Their immense weight anchors your body, further preventing your torso from lifting itself up.  The rough texture of the bark on various tree roots teases your " + player.nippleDescript(0) + "s mercilessly.", false);
 				}
 				//IF CHARACTER HAS A BALLS ADD SENTENCE
 				if (player.balls > 0) {
-					outputText("  Your " + player.skinTone + " " + sackDescript() + " rests beneath your raised " + buttDescript() + ".  Your " + ballsDescriptLight() + " pulse with the need to release their sperm through your " + multiCockDescriptLight() + " and ", false);
+					outputText("  Your " + player.skinTone + " " + player.sackDescript() + " rests beneath your raised " + player.buttDescript() + ".  Your " + player.ballsDescriptLight() + " pulse with the need to release their sperm through your " + player.multiCockDescriptLight() + " and ", false);
 					if (lake) outputText("into the waters of the nearby lake.", false);
 					else outputText("onto the fertile soil of the forest.", false);
 				}
 				//IF CHARACTER HAS A VAGINA ADD SENTENCE
 				if (player.vaginas.length >= 1) {
-					outputText("  Your " + vaginaDescript() + " and " + clitDescript() + " are thoroughly squashed between the bulky flesh where your male genitals protrude from between your hips and the " + buttDescript() + " above.", false);
+					outputText("  Your " + player.vaginaDescript() + " and " + player.clitDescript() + " are thoroughly squashed between the bulky flesh where your male genitals protrude from between your hips and the " + player.buttDescript() + " above.", false);
 					//IF CHARACTER HAS A DROOLING PUSSY ADD SENTENCE
 					if (player.vaginas[0].vaginalWetness >= VAGINA_WETNESS_DROOLING) {
 						outputText("  Juices stream from your womanhood and begin pooling on the dirt and twigs beneath you.  ", false);
@@ -363,21 +362,21 @@ package classes.Scenes.Areas
 			}
 			//FOR CENTAURS
 			else if (player.isTaur()) {
-				outputText("  The impending erection can't seem to be stopped.  Your sexual frustration forces stiffness into your " + multiCockDescriptLight() + ", which forces the barrel of your bestial torso to the ground.  Normally your erection would merely hover above the ground in between your legs, but your genitals have grown too large and heavy for your " + hipDescript() + " to hold them aloft.  Instead, you feel your body being forcibly pulled down at your hind legs until your bestial body is resting on top of your " + multiCockDescriptLight() + ".", false);
+				outputText("  The impending erection can't seem to be stopped.  Your sexual frustration forces stiffness into your " + player.multiCockDescriptLight() + ", which forces the barrel of your bestial torso to the ground.  Normally your erection would merely hover above the ground in between your legs, but your genitals have grown too large and heavy for your " + player.hipDescript() + " to hold them aloft.  Instead, you feel your body being forcibly pulled down at your hind legs until your bestial body is resting on top of your " + player.multiCockDescriptLight() + ".", false);
 				//IF CHARACTER HAS GIANT BREASTS ADD SENTENCE
 				if (player.biggestTitSize() >= 35) {
-					if (lake) outputText("  Your " + chestDesc() + " pull your human torso forward until it also is forced to face the ground, obscured as it is in boob-flesh.  Your tits rest on the wet earth to either side of you.  Their immense weight anchors you, further preventing any part of your equine body from lifting itself up.  Mud cakes their undersides and coats your " + nippleDescript(0) + "s.", false);
-					else outputText("  Your " + chestDesc() + " pull your human torso forward until it also is forced to face the ground, obscured as it is in boob-flesh.  Your tits rest on the dirt and twigs to either side of you.  Their immense weight anchors you, further preventing any part of your equine body from lifting itself up.  The rough texture of the bark on various tree roots teases your " + nippleDescript(0) + "s mercilessly.", false);
+					if (lake) outputText("  Your " + player.chestDesc() + " pull your human torso forward until it also is forced to face the ground, obscured as it is in boob-flesh.  Your tits rest on the wet earth to either side of you.  Their immense weight anchors you, further preventing any part of your equine body from lifting itself up.  Mud cakes their undersides and coats your " + player.nippleDescript(0) + "s.", false);
+					else outputText("  Your " + player.chestDesc() + " pull your human torso forward until it also is forced to face the ground, obscured as it is in boob-flesh.  Your tits rest on the dirt and twigs to either side of you.  Their immense weight anchors you, further preventing any part of your equine body from lifting itself up.  The rough texture of the bark on various tree roots teases your " + player.nippleDescript(0) + "s mercilessly.", false);
 				}
 				//IF CHARACTER HAS A BALLS ADD SENTENCE
 				if (player.balls > 0) {
-					outputText("  Your " + player.skinTone + sackDescript() + " rests beneath your raised " + buttDescript() + ".  Your " + ballsDescriptLight() + " pulse with the need to release their sperm through your " + multiCockDescriptLight() + " and ", false);
+					outputText("  Your " + player.skinTone + player.sackDescript() + " rests beneath your raised " + player.buttDescript() + ".  Your " + player.ballsDescriptLight() + " pulse with the need to release their sperm through your " + player.multiCockDescriptLight() + " and ", false);
 					if (lake) outputText("into the waters of the nearby lake.", false);
 					else outputText("onto the fertile soil of the forest floor.", false);
 				}
 				//IF CHARACTER HAS A VAGINA ADD SENTENCE
 				if (player.vaginas.length >= 1) {
-					outputText("  Your " + vaginaDescript() + " and " + clitDescript() + " are thoroughly squashed between the bulky flesh where your male genitals protrude from between your hips and the " + buttDescript() + " above.", false);
+					outputText("  Your " + player.vaginaDescript() + " and " + player.clitDescript() + " are thoroughly squashed between the bulky flesh where your male genitals protrude from between your hips and the " + player.buttDescript() + " above.", false);
 					//IF CHARACTER HAS A DROOLING PUSSY ADD SENTENCE
 					if (player.vaginas[0].vaginalWetness >= VAGINA_WETNESS_DROOLING) {
 						if (lake) outputText("  A leaf falls from a tree and lands on the wet lips of your cunt, its light touch teasing your sensitive skin.  Like a mare or cow in heat, your juices stream from your womanhood and pool in the mud beneath you.  The sloppy fem-spunk only makes the ground more muddy.", false);
@@ -400,7 +399,7 @@ package classes.Scenes.Areas
 				//Taurs
 				else if (player.isTaur()) outputText("  You struggle and work your multiple legs against the wet ground.  Your " + player.feet() + " have consistent trouble finding footing as the mud fails to provide enough leverage to lift your bulk.  You breath in deeply and lean side to side, trying to find some easier vertical leverage beneath your feet.  Eventually, with a crude crawl, your legs manages to push the bulk of your body onto more solid ground.  With great difficulty, you spend the next hour shuffling your genitals back to camp.", false);
 				//SCENE END = FOR ALL OTHER CHARACTERS
-				else outputText("  You struggle and push with your " + player.legs() + " as hard as you can, but it's no use.  You do the only thing you can and begin stroking your " + multiCockDescriptLight() + " with as much vigor as you can muster.  Eventually, your body tenses and a light load of jizz erupts from your body, but the orgasm is truly mild compared to what you need.  You're far too weary from struggling to give yourself the masturbation you truly need, but you continue to try.  Nearly an hour later, " + sMultiCockDesc() + " has softened enough to allow you to stand again, and you make your way back to camp, still dragging your genitals through the mud.", false);
+				else outputText("  You struggle and push with your " + player.legs() + " as hard as you can, but it's no use.  You do the only thing you can and begin stroking your " + player.multiCockDescriptLight() + " with as much vigor as you can muster.  Eventually, your body tenses and a light load of jizz erupts from your body, but the orgasm is truly mild compared to what you need.  You're far too weary from struggling to give yourself the masturbation you truly need, but you continue to try.  Nearly an hour later, " + player.sMultiCockDesc() + " has softened enough to allow you to stand again, and you make your way back to camp, still dragging your genitals through the mud.", false);
 			}
 			else {
 				//SCENE END = IF CHARACTER HAS FULL WINGS ADD SENTENCE
@@ -408,7 +407,7 @@ package classes.Scenes.Areas
 				//SCENE END IF CHARACTER HAS CENTAUR BODY
 				else if (player.isTaur()) outputText("  You struggle and work your multiple legs against the soft dirt.  Your " + player.feet() + " have consistent trouble finding footing as the ground fails to provide enough leverage to lift your bulk.  You breath in deeply and lean side to side, until eventually, your feet brace against the various roots of the trees around you.  With a crude crawl, your legs manage to shuffle your body and genitals out of the forest and back to camp.", false);
 				//SCENE END = FOR ALL OTHER CHARACTERS
-				else outputText("  You struggle and push with your " + player.legs() + " as hard as you can, but it's no use.  You do the only thing you can and begin stroking your " + multiCockDescriptLight() + " with as much vigor as you can muster.  Eventually, your body tenses and a light load of jizz erupts from your loins, but the orgasm is truly mild compared to what you need.  You're far too weary from struggling to give yourself the masturbation you truly need, but you continue to try.  Nearly an hour later, " + sMultiCockDesc() + " has softened enough to allow you to stand again, and you make your way back to camp, still dragging your genitals across the forest floor.", false);
+				else outputText("  You struggle and push with your " + player.legs() + " as hard as you can, but it's no use.  You do the only thing you can and begin stroking your " + player.multiCockDescriptLight() + " with as much vigor as you can muster.  Eventually, your body tenses and a light load of jizz erupts from your loins, but the orgasm is truly mild compared to what you need.  You're far too weary from struggling to give yourself the masturbation you truly need, but you continue to try.  Nearly an hour later, " + player.sMultiCockDesc() + " has softened enough to allow you to stand again, and you make your way back to camp, still dragging your genitals across the forest floor.", false);
 			}
 			dynStats("lus", 25 + rand(player.cor / 5), "resisted", false);
 			fatigue(5);
@@ -428,7 +427,7 @@ package classes.Scenes.Areas
 				outputText("<b>New codex entry unlocked: Satyrs!</b>\n\n")
 			}
 			//(Player lacks a penis:
-			if(!player.hasCock()) {
+			if (!player.hasCock()) {
 				outputText("You can't really see any way to take advantage of this scenario, so you simply turn back and leave the way you came.", false);
 				doNext(camp.returnToCampUseOneHour);
 			}
@@ -446,7 +445,7 @@ package classes.Scenes.Areas
 			clearOutput();
 			spriteSelect(99);
 			outputText("You shake your head, ", false);
-			if(player.cor < 50) outputText("disgusted by the strange thoughts this place seems to put into your mind", false);
+			if (player.cor < 50) outputText("disgusted by the strange thoughts this place seems to put into your mind", false);
 			else outputText("not feeling inclined to rape some satyr butt right now", false);
 			outputText(", and silently leave him to his pleasures.", false);
 			dynStats("lus", 5+player.lib/20);
@@ -459,17 +458,17 @@ package classes.Scenes.Areas
 			var x:Number = player.biggestCockIndex();
 
 			//(Low Corruption)
-			if(player.cor < 33) outputText("For a moment you hesitate... taking someone from behind without their consent seems wrong... but then again you doubt a satyr would pass on the opportunity if you were in his position.", false);
+			if (player.cor < 33) outputText("For a moment you hesitate... taking someone from behind without their consent seems wrong... but then again you doubt a satyr would pass on the opportunity if you were in his position.", false);
 			//(Medium Corruption)
-			else if(player.cor < 66) outputText("You smirk; normally you would have given this some thought, but the idea of free booty is all you need to make a decision.", false);
+			else if (player.cor < 66) outputText("You smirk; normally you would have given this some thought, but the idea of free booty is all you need to make a decision.", false);
 			//High Corruption
 			else outputText("You grin; this is not even a choice!  Passing on free anal is just not something a decent person does, is it?", false);
 
 			outputText("  You silently strip your " + player.armorName + " and ", false);
-			if(player.isNaga()) outputText("slither", false);
+			if (player.isNaga()) outputText("slither", false);
 			else outputText("sneak", false);
 
-			outputText(" towards the distracted satyr; stopping a few feet away, you stroke your " + cockDescript(x) + ", urging it to full erection and coaxing a few beads of pre, which you smear along your " + player.cockHead(x) + ".  With no warning, you lunge forward, grabbing and pulling his hips towards your " + cockDescript(x) + " and shoving as much of yourself inside his tight ass as you can.\n\n", false);
+			outputText(" towards the distracted satyr; stopping a few feet away, you stroke your " + player.cockDescript(x) + ", urging it to full erection and coaxing a few beads of pre, which you smear along your " + player.cockHead(x) + ".  With no warning, you lunge forward, grabbing and pulling his hips towards your " + player.cockDescript(x) + " and shoving as much of yourself inside his tight ass as you can.\n\n", false);
 
 			outputText("The satyr lets out a startled yelp, struggling against you, but between his awkward position and the mutant flower ravenously sucking on his sizable cock, he's helpless.\n\n", false);
 
@@ -478,30 +477,30 @@ package classes.Scenes.Areas
 			outputText("Eventually, his bleating and screaming start to annoy you, so you silence him by grabbing at his horns and shoving his head to the side, into one of the breast-like growths nearby.  The satyr unthinkingly latches onto the floral nipple and starts to suckle, quieting him as you hoped.  You're not sure why, but he starts to voluntarily buck back and forth between you and the flower; maybe he's getting into the spirit of things, or maybe the vegetal teat he's pulling on has introduced an aphrodisiac chemical after so many violent attempts to pull out of the kindred flower.\n\n", false);
 
 			outputText("You resolve not to think about it right now and just enjoy pounding the satyr's ass.  With his bucking you're able to thrust even farther into his tight puckered cherry, ", false);
-			if(player.cockArea(x) >= 100) outputText("stretching it all out of normal proportion and ruining it for whomever might happen to use it next.", false);
-			else outputText("stretching it to fit your " + cockDescript(x) + " like a condom.", false);
+			if (player.cockArea(x) >= 100) outputText("stretching it all out of normal proportion and ruining it for whomever might happen to use it next.", false);
+			else outputText("stretching it to fit your " + player.cockDescript(x) + " like a condom.", false);
 			outputText("  Your groin throbs, ", false);
-			if(player.balls > 0) outputText("your balls churn, ", false);
-			outputText("and you grunt as you feel the first shots of cum flowing along " + sMultiCockDesc() + ", only to pour out into", false);
-			if(player.cockTotal() > 1) outputText(" and onto", false);
+			if (player.balls > 0) outputText("your balls churn, ", false);
+			outputText("and you grunt as you feel the first shots of cum flowing along " + player.sMultiCockDesc() + ", only to pour out into", false);
+			if (player.cockTotal() > 1) outputText(" and onto", false);
 			outputText(" the satyr's abused ass; you continue pounding him even as you climax, causing rivulets of cum to run down his cheeks and legs.\n\n", false);
 
 			outputText("Still slurping obscenely on the fake breast, the satyr groans and murmurs; you're not sure how much of a role the sap he's swallowing or the cunt-flower on his cock is playing, but it looks like he's actually enjoying himself now.", false);
 
 			//(Low Cum Amount)
-			if(player.cumQ() < 250) outputText("  As much as you'd love to fill his belly so full of spunk he'd look pregnant, you just can't muster any more, and pull out with a sigh.\n\n", false);
+			if (player.cumQ() < 250) outputText("  As much as you'd love to fill his belly so full of spunk he'd look pregnant, you just can't muster any more, and pull out with a sigh.\n\n", false);
 			//(Medium Cum Amount)
-			else if(player.cumQ() < 1000) outputText("  You cum and cum, filling every crevice of his anal passage with warm jism, the slutty goatman doesn't seem to mind this in the least.  When you're finally spent, you pull out with a sigh, and watch as your cum backflows out of his ass to fall on the grass below.\n\n", false);
+			else if (player.cumQ() < 1000) outputText("  You cum and cum, filling every crevice of his anal passage with warm jism, the slutty goatman doesn't seem to mind this in the least.  When you're finally spent, you pull out with a sigh, and watch as your cum backflows out of his ass to fall on the grass below.\n\n", false);
 			//(Large Cum Amount)
 			else outputText("  You cum and cum, filling every crevice of his anal passage with warm jism, and the slutty goatman doesn't seem to mind this in the least - yet.  You push him to his limits; cum backflows out of his ass and around your spewing prick, but still you dump more and more of your heavy load inside your now-willing cock-sleeve, inflating his belly like a balloon.  When you're finally spent, you pull out with a sigh and look at your handiwork; cum pours out of his ass like an open tap and his belly is absolutely bulging, making him look pregnant.\n\n", false);
 
 			outputText("The satyr is too absorbed in his own fucking of the plant-pussy, and his nursing of the tree boob to bewail your absence", false);
-			if(player.cumQ() >= 1000) outputText(", although his eyes have widened perceptibly along with the stretching of his stomach", false);
+			if (player.cumQ() >= 1000) outputText(", although his eyes have widened perceptibly along with the stretching of his stomach", false);
 			outputText(".\n\n", false);
 
 			outputText("You can't help but smile inwardly at the helpless goatman's eagerness, and decide to stick around and watch him a little longer.  It's not everyday you see a creature like him at your mercy.  Every once in awhile you egg him on with a fresh slapping of his butt. The satyr grumbles and huffs, but continues to thrust and rut mindlessly into the vegetative pussy feeding on his cock. You don't think it'll be long before he cums...\n\n", false);
 
-			outputText("As you watch the lewd display, you feel your arousal building and your " + cockDescript(x) + " growing back into full mast. Figuring you already have a willing slut readily available, you consider using him to relieve yourself once more... What do you do?", false);
+			outputText("As you watch the lewd display, you feel your arousal building and your " + player.cockDescript(x) + " growing back into full mast. Figuring you already have a willing slut readily available, you consider using him to relieve yourself once more... What do you do?", false);
 			player.orgasm();
 			//[Again][Leave]
 			simpleChoices("Again", secondSatyrFuck, "", null, "", null, "", null, "Leave", dontRepeatFuckSatyr);
@@ -517,9 +516,9 @@ package classes.Scenes.Areas
 		//[=Again=]
 		private function secondSatyrFuck():void {
 			var x:int = player.cockThatFits(monster.analCapacity());
-			if(x < 0) x = player.smallestCockIndex();
+			if (x < 0) x = player.smallestCockIndex();
 			clearOutput();
-			outputText("There's no harm in using the helpless goat once more... This time though, you decide you'll use his mouth.  With a yank on his horns, you forcefully dislodge him from the breast-plant and force him to his knees, turning his head towards you; he doesn't put up much resistance and when you present your erect shaft to him, he licks his lips in excitement and latches onto your " + cockDescript(x) + ".\n\n", false);
+			outputText("There's no harm in using the helpless goat once more... This time though, you decide you'll use his mouth.  With a yank on his horns, you forcefully dislodge him from the breast-plant and force him to his knees, turning his head towards you; he doesn't put up much resistance and when you present your erect shaft to him, he licks his lips in excitement and latches onto your " + player.cockDescript(x) + ".\n\n", false);
 
 			outputText("His mouth is exquisite; it feels slippery and warm and his lips are soft while his tongue wriggles about your shaft, trying to embrace and massage it.  He gloms onto your manhood with eager hunger, desperate to ravish you with his mouth.  Quivers of pleasure ripple and shudder through his body as he slobbers and gulps - and no wonder!  From the remnants of sap still in his mouth, you can feel currents of arousal tingling down your cock; if he's been drinking it straight, his mouth must be as sensitive as a cunt from the effects of this stuff.\n\n", false);
 

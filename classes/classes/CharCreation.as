@@ -162,7 +162,7 @@
 			player.skinType = SKIN_TYPE_PLAIN;
 			player.faceType = FACE_HUMAN;
 			if (flags[kFLAGS.NEW_GAME_PLUS_LEVEL] == 0) player.tailType = TAIL_TYPE_NONE;
-			player.tongueType = TONUGE_HUMAN;
+			player.tongueType = TONGUE_HUMAN;
 			if (flags[kFLAGS.NEW_GAME_PLUS_LEVEL] == 0) player.femininity = 50;
 			player.beardLength = 0;
 			player.beardStyle = 0;
@@ -334,13 +334,13 @@
 			
 			//Clear Statuses
 			var statusTemp:Array = [];
-			for (var i:int = 0; i < player.statusAffects.length; i++) {
-				if (isSpell(player.statusAffects[i].stype)) statusTemp.push(player.statusAffects[i]);
+			for (var i:int = 0; i < player.statusEffects.length; i++) {
+				if (isSpell(player.statusEffects[i].stype)) statusTemp.push(player.statusEffects[i]);
 			}
 			player.removeStatuses();
 			if (statusTemp.length > 0) {
 				for (i = 0; i < statusTemp.length; i++) {
-					player.createStatusAffect(statusTemp[i].stype, statusTemp[i].value1, statusTemp[i].value2, statusTemp[i].value3, statusTemp[i].value4);
+					player.createStatusEffect(statusTemp[i].stype, statusTemp[i].value1, statusTemp[i].value2, statusTemp[i].value3, statusTemp[i].value4);
 				}
 			}
 			//Clear perks
@@ -393,12 +393,6 @@
 		}
 		
 		private function chooseName():void {
-			if (kGAMECLASS.testingBlockExiting) {
-				// We're running under the testing script.
-				// Stuff a name in the box and go go go
-				mainView.nameBox.text = "Derpy";
-				return;
-			}
 			if (mainView.nameBox.text == "") {
 				//If part of newgame+, don't fully wipe.
 				if (player.XP > 0 && player.explored == 0) {
@@ -481,7 +475,7 @@
 			clearOutput();
 			
 			outputText("<b>" + ComboBox(event.target).selectedItem.data[0] + ":</b> " + ComboBox(event.target).selectedItem.data[3]);
-			if(ComboBox(event.target).selectedItem.data[2])
+			if (ComboBox(event.target).selectedItem.data[2])
 				outputText("\n\nThis character have pre-defined history.");
 			else
 				outputText("\n\nThis character have no pre-defined history.");
@@ -748,7 +742,7 @@
 		private function setHair(choice:String):void {
 			player.hairColor = choice;
 			clearOutput();
-			outputText("You have " + hairDescript() + ".\n\nYou will proceed to customization.");
+			outputText("You have " + player.hairDescript() + ".\n\nYou will proceed to customization.");
 			//chooseEndowment(false);
 			genericStyleCustomizeMenu();
 		}
@@ -872,12 +866,6 @@
 		//-----------------
 		private function setHeight():void {
 			clearOutput();
-			if (kGAMECLASS.testingBlockExiting)
-			{
-				// We're running under the testing script.
-				// Stuff a number in the box and go go go
-				mainView.nameBox.text = "69";
-			}
 			outputText("Set your height in inches.");
 			outputText("\nYou can choose any height between 4 feet (48 inches) and 8 feet (96 inches).");
 			mainView.nameBox.visible = true;
@@ -1628,7 +1616,7 @@
 		}
 
 		private function isSpell(statusEffect:* = null):Boolean {
-			return (statusEffect == StatusAffects.KnowsCharge || statusEffect == StatusAffects.KnowsBlind || statusEffect == StatusAffects.KnowsWhitefire || statusEffect == StatusAffects.KnowsArouse || statusEffect == StatusAffects.KnowsHeal || statusEffect == StatusAffects.KnowsMight); 
+			return (statusEffect == StatusEffects.KnowsCharge || statusEffect == StatusEffects.KnowsBlind || statusEffect == StatusEffects.KnowsWhitefire || statusEffect == StatusEffects.KnowsArouse || statusEffect == StatusEffects.KnowsHeal || statusEffect == StatusEffects.KnowsMight); 
 		}
 	}
 }
