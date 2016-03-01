@@ -9,7 +9,7 @@
 		override public function defeated(hpVictory:Boolean):void
 		{
 			game.flags[kFLAGS.DEMONS_DEFEATED]++;
-			if (findStatusAffect(StatusAffects.KitsuneFight) >= 0) {
+			if (findStatusEffect(StatusEffects.KitsuneFight) >= 0) {
 				game.forest.kitsuneScene.winKitsuneImpFight();
 			} else {
 				game.impScene.impVictory();
@@ -18,7 +18,7 @@
 
 		override public function won(hpVictory:Boolean, pcCameWorms:Boolean):void
 		{
-			if (findStatusAffect(StatusAffects.KitsuneFight) >= 0) {
+			if (findStatusEffect(StatusEffects.KitsuneFight) >= 0) {
 				game.forest.kitsuneScene.loseKitsuneImpFight();
 			} else if (pcCameWorms) {
 				outputText("\n\nThe imp grins at your already corrupted state...", false);
@@ -47,19 +47,19 @@
 			if (player.lust >= 60 && player.hasVagina()) {
 				switch (player.vaginas[0].vaginalWetness) {
 					case VAGINA_WETNESS_NORMAL:
-						outputText("Your " + game.allVaginaDescript() + " dampen" + (player.vaginas.length > 1 ? "" : "s") + " perceptibly.");
+						outputText("Your " + player.allVaginaDescript() + " dampen" + (player.vaginas.length > 1 ? "" : "s") + " perceptibly.");
 						break;
 					case VAGINA_WETNESS_WET:
 						outputText("Your crotch becomes sticky with girl-lust.");
 						break;
 					case VAGINA_WETNESS_SLICK:
-						outputText("Your " + game.allVaginaDescript() + " become" + (player.vaginas.length > 1 ? "" : "s") + " sloppy and wet.");
+						outputText("Your " + player.allVaginaDescript() + " become" + (player.vaginas.length > 1 ? "" : "s") + " sloppy and wet.");
 						break;
 					case VAGINA_WETNESS_DROOLING:
 						outputText("Thick runners of girl-lube stream down the insides of your thighs.");
 						break;
 					case VAGINA_WETNESS_SLAVERING:
-						outputText("Your " + game.allVaginaDescript() + " instantly soak" + (player.vaginas.length > 1 ? "" : "s") + " your groin.");
+						outputText("Your " + player.allVaginaDescript() + " instantly soak" + (player.vaginas.length > 1 ? "" : "s") + " your groin.");
 					default: //Dry vaginas are unaffected
 						
 				}
