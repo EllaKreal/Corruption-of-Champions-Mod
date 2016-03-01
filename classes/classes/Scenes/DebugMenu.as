@@ -403,6 +403,7 @@ package classes.Scenes
 			undergarmentArray.push(undergarments.DS_BRA);
 			undergarmentArray.push(undergarments.DS_LOIN);
 			undergarmentArray.push(undergarments.DSTHONG);
+			undergarmentArray.push(undergarments.FUNDOSH);
 			undergarmentArray.push(undergarments.FURLOIN);
 			undergarmentArray.push(undergarments.GARTERS);
 			undergarmentArray.push(undergarments.LTX_BRA);
@@ -525,7 +526,7 @@ package classes.Scenes
 			//Draconic TF
 			player.skinType = SKIN_TYPE_SCALES;
 			player.skinDesc = "scales";
-			player.tongueType = TONUGE_DRACONIC;
+			player.tongueType = TONGUE_DRACONIC;
 			player.hornType = HORNS_DRACONIC_X2;
 			player.horns = 4;
 			player.wingType = WING_TYPE_DRACONIC_LARGE;
@@ -557,7 +558,7 @@ package classes.Scenes
 			for (var i:int = 0; i < 10; i++) {
 				if (player.prisonItemSlots[i*2] != null && player.prisonItemSlots[i*2] != undefined) {
 					outputText("\n" + player.prisonItemSlots[i*2]);
-					outputText(" x" + player.prisonItemSlots[(i*2)+1]);
+					outputText(" x" + player.prisonItemSlots[(i*2) +1]);
 				}
 			}
 			flushOutputTextToGUI();

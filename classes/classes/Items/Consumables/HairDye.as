@@ -9,11 +9,13 @@ package classes.Items.Consumables
 	{
 		private var _color:String;
 		
-		public function HairDye(id:String, color:String, value:int = ConsumableLib.DEFAULT_VALUE) 
+		public function HairDye(id:String, color:String) 
 		{
 			_color = color.toLowerCase();
 			var shortName:String = color + " Dye";
 			var longName:String = "a vial of " + _color + " hair dye";
+			var value:int = ConsumableLib.DEFAULT_VALUE;
+			if (color == "rainbow") value = 100;
 			var description:String = "This bottle of dye will allow you to change the color of your hair.  Of course if you don't have hair, using this would be a waste.";
 			super(id, shortName, longName, value, description);
 		}
@@ -54,12 +56,12 @@ package classes.Items.Consumables
 				outputText("You rub the dye into your bald head, but it has no effect.");
 			}
 			else if (game.player.hairColor.indexOf("rubbery") != -1 || game.player.hairColor.indexOf("latex-textured") != -1) {
-				outputText("You massage the dye into your " + game.hairDescript() + " but the dye cannot penetrate the impermeable material your hair is composed of.");
+				outputText("You massage the dye into your " + game.player.hairDescript() + " but the dye cannot penetrate the impermeable material your hair is composed of.");
 			}
 			else {
-				outputText("You rub the dye into your " + game.hairDescript() + ", then use a bucket of cool lakewater to rinse clean a few minutes later.  ");
+				outputText("You rub the dye into your " + game.player.hairDescript() + ", then use a bucket of cool lakewater to rinse clean a few minutes later.  ");
 				game.player.hairColor = _color;
-				outputText("You now have " + game.hairDescript() + ".");
+				outputText("You now have " + game.player.hairDescript() + ".");
 				if (game.player.lust > 50) {
 					outputText("\n\nThe cool water calms your urges somewhat, letting you think more clearly.");
 					game.dynStats("lus", -15);
