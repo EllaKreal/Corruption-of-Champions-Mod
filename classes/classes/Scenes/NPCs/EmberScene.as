@@ -143,7 +143,7 @@ package classes.Scenes.NPCs
 			return flags[kFLAGS.EMBER_AFFECTION];
 		}
 
-		private function emberCorruption(changes:Number = 0):Number
+		public function emberCorruption(changes:Number = 0):Number
 		{
 			flags[kFLAGS.EMBER_COR] += changes;
 			if (flags[kFLAGS.EMBER_COR] > 100) flags[kFLAGS.EMBER_COR] = 100;
@@ -151,6 +151,15 @@ package classes.Scenes.NPCs
 			return flags[kFLAGS.EMBER_COR];
 		}
 
+		public function emberSparIntensity():int
+		{
+			var amount:int = 0;
+			amount += Math.floor(flags[kFLAGS.EMBER_AFFECTION] / 5);
+			amount += flags[kFLAGS.EMBER_SPAR_VICTORIES];
+			if (amount > 100) amount = 100;
+			return amount;
+		}
+		
 		override public function followerEmber():Boolean
 		{
 			return flags[kFLAGS.EMBER_HATCHED] > 0;
@@ -221,7 +230,7 @@ package classes.Scenes.NPCs
 			if (flags[kFLAGS.EMBER_MILK] > 0 || (player.hasItem(consumables.LACTAID, 1) && flags[kFLAGS.EMBER_AFFECTION] >= 75)) addButton(3, "Drink Milk", getMilkFromEmber, null, null, null, "Ask Ember if " + emberMF("he", "she") + "'s willing to let you drink " + emberMF("his", "her") + " milk." + (flags[kFLAGS.EMBER_MILK] > 0 ? "": "\n\nThis will cost you 1 Lactaid each time you want to suckle milk.") + "");
 			if ((flags[kFLAGS.EMBER_OVIPOSITION] > 0 || (player.hasItem(consumables.OVIELIX, 1) && flags[kFLAGS.EMBER_AFFECTION] >= 75)) && flags[kFLAGS.EMBER_GENDER] >= 2 && !pregnancy.isPregnant) addButton(4, "Get Egg", emberIsAnEggFactory, null, null, null, "Ask Ember if " + emberMF("he", "she") + "'s willing to lay an unfertilized egg for you." + (flags[kFLAGS.EMBER_OVIPOSITION] > 0 ? "": "\n\nThis will cost you 1 Ovi Elixir each time you want " + emberMF("him", "her") + " to lay an unfertilized egg.") + "");
 			addButton(5, "Sex", emberSexMenu, null, null, null, "Get into a sex session with Ember.");
-			addButton(6, "Spar", decideToSparEmbra, null, null, null, "Do a quick battle with Ember!");
+			addButton(6, "Spar", decideToSparEmbra, null, null, null, "Do a quick battle with Ember! \n\nCurrent Intensity: " + emberSparIntensity());
 			if (model.time.hours >= 21 || model.time.hours < 5) {
 				if (flags[kFLAGS.EMBER_AFFECTION] < 75) addButton(7, "Sleep With?", sleepWithEmber, null, null, null, "Try to spend the night with Ember.");
 				else addButton(7, "Sleep With", sleepWithEmber, null, null, null, "Spend the night with Ember.");
@@ -298,7 +307,7 @@ package classes.Scenes.NPCs
 			//choices("Catch Anal",catchAnal,"Pitch Anal",pitchAnal,"Blow Ember",blowEmber,"Get Blown",getBlown,"Eat Her Out",eatOut,"Get Eaten Out",getEatenOut,"Penetrate Her",penetrateHer,"Get Penetrated",getPenetrated,"",0,"Leave",emberCampMenu);
 			menu();
 
-			if (flags[kFLAGS.EMBER_GENDER] == 1 || flags[kFLAGS.EMBER_GENDER] == 3) addButton(0, "Catch Anal", catchAnal, null, null, null, "Ask Ember if " + emberMF("he", "she") + "'s willing to penetrate your [ass] with that cock of " + emberMF("his", "hers") + ".");
+			if (flags[kFLAGS.EMBER_GENDER] == 1 || flags[kFLAGS.EMBER_GENDER] == 3) addButton(0, "Catch Anal", catchAnal, null, null, null, "Ask Ember if " + emberMF("he", "she") + "'s willing to penetrate your " + player.assDescript() + " with that cock of " + emberMF("his", "hers") + ".");
 			if (player.hasCock() && player.lust >= 33) addButton(1, "Pitch Anal", stickItInEmbersButt, null, null, null, "Penetrate Ember anally with your cock.");
 			if (flags[kFLAGS.EMBER_GENDER] == 1 || flags[kFLAGS.EMBER_GENDER] == 3) addButton(2, "Blow Ember", suckEmberCock, null, null, null, "Suck Ember's cock and get a taste of " + emberMF("his", "her") + " cum. " + (flags[kFLAGS.HUNGER_ENABLED] > 0 ? "\n\nAnd get your belly stuffed, of course!" : "") + "");
 			if (player.hasCock() && player.lust >= 33) addButton(3, "Get Blown", stickDickInKnifeDrawer, null, null, null, "Ask Ember if " + emberMF("he", "she") + "'s willing to suck you off.");
@@ -942,7 +951,8 @@ package classes.Scenes.NPCs
 					outputText("\n\nEmber's body is a curvy thing, not rough like you'd expect from a reptilian creature, but rounded and almost soft-looking, with a taut belly and a perfect hourglass figure, giving " + emberMF("him", "her") + " the silhouette of an amazon from your village's histories: beautiful but powerful.  Excepting the wings and horns, of course.");
 				}
 				outputText("\n\nThe dragon scorns clothing and exposes " + emberMF("him", "her") + "self to both you and the elements with equal indifference, claiming " + emberMF("his", "her") + " scales are all the covering " + emberMF("he", "she") + " needs... and yet when you admire " + emberMF("his", "her") + " body, " + emberMF("he", "she") + " is quick to hide it from your wandering gaze.");
-				outputText("\n\n" + emberMF("His", "Her") + " head is reptilian, with sharp teeth fit for a predator and strong ridges on the underside of the jaw.  At the sides of " + emberMF("his", "her") + " head are strange, fin-like growths concealing small holes; you presume these to be the dragon equivalent of ears.  Atop " + emberMF("his", "her") + " head sit a pair of ebony horns that curve backwards elegantly; despite being as tough as steel, their shape is not fit for use in combat, instead it is simply aesthetical, giving Ember a majestic look.  A long tongue occasionally slips out, to lick at " + emberMF("his", "her") + " jaws and teeth.  Prideful, fierce eyes, with slit pupils and burning orange irises, glitter even in the darkness.");
+				outputText("\n\n" + emberMF("His", "Her") + " head is reptilian, with sharp teeth fit for a predator and strong ridges on the underside of the jaw.  At the sides of " + emberMF("his", "her") + " head are strange, fin-like growths concealing small holes; you presume these to be the dragon equivalent of ears.  Atop " + emberMF("his", "her") + " head sit two pairs of ebony horns that curve backwards elegantly; despite being as tough as steel, their shape is not fit for use in combat, instead it is simply aesthetical, giving Ember a majestic look.  A long tongue occasionally slips out, to lick at " + emberMF("his", "her") + " jaws and teeth.  Prideful, fierce eyes, with slit pupils and burning orange irises, glitter even in the darkness.");
+				outputText("  They come with the typical second set of eyelids, allowing " + emberMF("him", "her") + " to blink twice as much as others.");
 				//(if Ember has any hair)
 				if (flags[kFLAGS.EMBER_HAIR] == 1) {
 					if (flags[kFLAGS.EMBER_GENDER] == 1) outputText("  Short ");
@@ -1649,7 +1659,7 @@ package classes.Scenes.NPCs
 						//maxxed out, new row
 						else {
 							//--Next horn growth adds second row and brings length up to 12\"
-							outputText("\n\nA second row of horns erupts under the first, and though they are narrower, they grow nearly as long as your first row before they stop.  A sense of finality settles over you.  <b>You have as many horns as a lizan can grow.</b>", false);
+							outputText("\n\nA second row of horns erupts under the first, and though they are narrower, they grow nearly as long as your first row before they stop.  A sense of finality settles over you.  <b>You have as many horns as a dragon can grow.</b>", false);
 							player.hornType = HORNS_DRACONIC_X4_12_INCH_LONG;
 							changes++;
 						}
@@ -1671,13 +1681,29 @@ package classes.Scenes.NPCs
 			}
 			//(Pending Tongue Masturbation Variants; if we ever get around to doing that.)
 			//Gain Dragon Scales
-			if (player.skinType != SKIN_TYPE_SCALES && changes < changeLimit && rand(3) == 0) {
+			if (player.skinType != SKIN_TYPE_DRACONIC && changes < changeLimit && rand(3) == 0) {
 				outputText("\n\nPrickling discomfort suddenly erupts all over your body, like every last inch of your skin has suddenly developed pins and needles.  You scratch yourself, hoping for relief; and when you look at your hands you notice small fragments of your " + player.skinFurScales() + " hanging from your fingers.  Nevertheless you continue to scratch yourself, and when you're finally done, you look yourself over. New shield-like scales have grown to replace your peeled off " + player.skinFurScales() + ".  They are smooth and look nearly as tough as iron. <b>Your body is now covered in shield-shaped dragon scales.</b>");
-				player.skinType = SKIN_TYPE_SCALES;
-				player.skinAdj = "";
+				player.skinType = SKIN_TYPE_DRACONIC;
+				player.skinAdj = "tough";
 				player.skinDesc = "scales";
 				//def bonus of scales
 			}
+			//<mod name="Reptile eyes" author="Stadler76">
+			//Gain Dragon Eyes
+			if (player.eyeType != EYES_DRAGON && player.skinType == SKIN_TYPE_DRACONIC && player.earType == EARS_DRAGON && player.hasDragonHorns() && changes < changeLimit && rand(4) == 0) {
+				if (player.hasReptileEyes())
+					outputText("\n\nYour eyes change slightly in their appearance.");
+				else
+				{
+					outputText("\n\nYou feel a sudden surge of pain in your eyes as they begin to reshape. Your pupils begin to elongate becoming vertically slitted and your irises change their color, too.");
+					outputText("\nAs the pain passes, you examine your eyes in a nearby puddle. You look into your new prideful, fierce dragon eyes with vertically slitted pupils and burning orange irises.");
+					outputText("  They glitter even in the darkness. With a few tears remaining, the look is a bit blurry. Wanting to get a clearer look at them, you blink your remaining tears away and suddenly you realize, that you just did that with your second set of eyelids.");
+				}
+				outputText("  <b>You now have fierce dragon eyes.</b>");
+				player.eyeType = EYES_DRAGON;
+				changes++;
+			}
+			//</mod>
 			//Gain Dragon Legs
 			if (player.lowerBody != LOWER_BODY_TYPE_DRAGON && changes < changeLimit && rand(3) == 0) {
 				//(if drider)
@@ -1753,6 +1779,23 @@ package classes.Scenes.NPCs
 				}
 				changes++;
 			}
+			// <mod name="Predator arms" author="Stadler76">
+			//Gain Dragon Arms (Derived from ARM_TYPE_SALAMANDER)
+			if (player.armType != ARM_TYPE_PREDATOR && player.skinType == SKIN_TYPE_DRACONIC && player.lowerBody == LOWER_BODY_TYPE_DRAGON && changes < changeLimit && rand(3) == 0) {
+				outputText("\n\nYou scratch your biceps absentmindedly, but no matter how much you scratch, you can't get rid of the itch.  After a longer moment of ignoring it you finally glance down in irritation, only to discover that your arms former appearance has changed into those of some reptilian killer with shield-shaped " + player.skinTone + " scales and powerful, thick curved claws replacing your fingernails.");
+				outputText("\n<b>You now have dragon arms.</b>", false);
+				player.armType = ARM_TYPE_PREDATOR;
+				player.clawType = CLAW_TYPE_DRAGON;
+				changes++
+			}
+			//Claw transition
+			if (player.armType == ARM_TYPE_PREDATOR && player.skinType == SKIN_TYPE_DRACONIC && player.clawType != CLAW_TYPE_DRAGON && changes < changeLimit && rand(3) == 0) {
+				outputText("\n\nYour " + player.claws() + " change  a little to become more dragon-like.");
+				player.clawType = CLAW_TYPE_DRAGON;
+				outputText(" <b>You now have " + player.claws() + ".</b>");
+				changes++
+			}
+			// </mod>
 			//Get Dragon Breath (Tainted version)
 			//Can only be obtained if you are considered a dragon-morph, once you do get it though, it won't just go away even if you aren't a dragon-morph anymore.
 
@@ -2227,13 +2270,13 @@ package classes.Scenes.NPCs
 			clearOutput();
 			outputText("You feel like you could use some practice; just to be ready for whatever you stumble upon when adventuring, and ask Ember how " + emberMF("he", "she") + "'d feel about sparring with you.");
 			//(Low Affection)
-			if (emberAffection() <= 25) {
+			if (emberAffection() <= 25 && emberSparIntensity() <= 5) {
 				outputText("\n\n\"<i>Ha!  You have to be joking.  We both know you'll end up hurting yourself.</i>\"");
 				outputText("\n\nIntent on proving " + emberMF("him", "her") + " wrong, you brandish your [weapon].");
 				outputText("\n\n\"<i>Well, if you're so set on being knocked about...</i>\"  Ember leads you to an isolated clearing on the outskirts of the camp and assumes a battle pose.");
 			}
 			//(Medium Affection)
-			else if (emberAffection() < 75) {
+			else if (emberAffection() < 75 && emberSparIntensity() <= 15) {
 				outputText("\n\n\"<i>Are you sure?  I should have you know that I won't be holding back at all!</i>\" Ember warns you, assuming " + emberMF("his", "her") + " battle stance.");
 				outputText("\n\nThat's exactly what you're expecting of " + emberMF("him", "her") + ".  You need to get strong, and " + emberMF("he", "she") + "'s the best sparring partner you could hope for.");
 				outputText("\n\nEmber smiles at you.  \"<i>Ha!  Flattery won't earn you any mercy!  So get ready!</i>\"");
@@ -2249,6 +2292,7 @@ package classes.Scenes.NPCs
 		public function beatEmberSpar():void
 		{
 			clearOutput();
+			var oldIntensity:int = emberSparIntensity();
 			if (emberAffection() <= 25) {
 				outputText("Ember lies on " + emberMF("his", "her") + " back, while you stand over the defeated dragon triumphantly.  You extend a helping hand, intent on pulling " + emberMF("him", "her") + " up, but " + emberMF("he", "she") + " bats it away, flinching in shame at " + emberMF("his", "her") + " defeat.");
 				outputText("\n\n\"<i>I don't need your help you... you... cheater!</i>\"");
@@ -2278,6 +2322,20 @@ package classes.Scenes.NPCs
 				outputText("\n\n\"<i>Okay... I guess you have some skill, after all,</i>\" Ember admits.  \"<i>Next time I'm beating you up, it's a promise!</i>\"  You smile, knowing just how much pride the dragon had to swallow, and tell " + emberMF("him", "her") + " that you'll see what happens when it happens.");
 				outputText("\n\n\"<i>Okay, let's go back then,</i>\" Ember says, pulling you close and walking back to the camp with you.");
 				emberAffection(5);
+			}
+			flags[kFLAGS.EMBER_SPAR_VICTORIES]++;
+			//Announce changes
+			if (emberSparIntensity() >= 5 && oldIntensity < 5) {
+				outputText("\n\n<b>Ember will now use " + emberMF("his", "her") + " Dragon Breath special attacks in subsequent spar sessions. Damage scales with intensity.</b>");
+			}
+			if (emberSparIntensity() >= 15 && oldIntensity < 15) {
+				outputText("\n\n<b>Ember will now use " + emberMF("his", "her") + " Dragon Force special attacks in subsequent spar sessions. Such attacks may stun you.</b>");
+			}
+			if (emberSparIntensity() >= 30 && oldIntensity < 30) {
+				outputText("\n\n<b>Ember's Dragon Force special attack now has 50% chance to bypass Resolute perk. In addition, Ember's Dragon Force special attack now has cooldown reduced by one turn.</b>");
+			}
+			if (emberSparIntensity() >= 45 && oldIntensity < 45) {
+				outputText("\n\n<b>Ember's Dragon Force special attack now has cooldown reduced by one turn.</b>");
 			}
 			combat.cleanupAfterCombat();
 		}

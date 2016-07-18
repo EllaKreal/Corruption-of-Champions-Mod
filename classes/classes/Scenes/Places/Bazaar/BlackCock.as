@@ -953,7 +953,7 @@ package classes.Scenes.Places.Bazaar
 				}
 				outputText("\n\nWith a groan your face contorts as you feel fluid working through [eachCock] as you pound the fleshy bunz of the little lust addled and cum covered satyr.");
 				if (player.hasKnot()) {
-					outputText("\n\nWith a hoarse yell you shove your [knot] into the satyr who gives a yelp as your [cock] spasms inside him, spurting into his now gaping love tunnel with a vengeance. ");
+					outputText("\n\nWith a hoarse yell you shove your knot into the satyr who gives a yelp as your [cock] spasms inside him, spurting into his now gaping love tunnel with a vengeance. ");
 					if (player.cumQ() >= 2500) outputText("You watch with relish as the little guy’s stomach swells, your baby batter filling him up from the back door and pushing his still bent legs forward, forcing him to let them go. ");
 					outputText("Andy Mathis looks up at you with a lazy smile as he holds his hand up, asking for a high five. With a chuckle and a shake of your head you give it to him before tugging your knot, uncocking his insides and letting your potent seed spread onto the floor. Feeling a little tired and sweaty you look down at your cum covered and lightly dozing fuck buddy, watching his chest rise and fall before you gather your [armor] and exit through the back gate, headed back for camp now that you’ve had your fill.");
 				}
@@ -1453,7 +1453,7 @@ package classes.Scenes.Places.Bazaar
 				changes++;
 			}
 			//Transformations
-			if (rand(3) == 0 && changes < changeLimit && player.skinType == SKIN_TYPE_SCALES) {
+			if (rand(3) == 0 && changes < changeLimit && player.hasScales()) {
 				outputText("\n\nYou feel an odd rolling sensation as your scales begin to shift, spreading and reforming as they grow and disappear, <b>becoming normal human skin</b>.");
 				player.skinType = SKIN_TYPE_PLAIN;
 				changes++;
@@ -1474,7 +1474,7 @@ package classes.Scenes.Places.Bazaar
 				player.faceType = FACE_HUMAN;
 				changes++;
 			}
-			if (rand(4) == 0 && changes < changeLimit && player.skinType != SKIN_TYPE_SCALES && player.earType != EARS_ELFIN) {
+			if (rand(4) == 0 && changes < changeLimit && !player.hasScales() && player.earType != EARS_ELFIN) {
 				outputText("\n\nYou feel an odd shifting sensation on the side of your head and, reaching up to inspect it, find a <b>pair of fleshy pointed ears</b>. "); 
 				if (player.skinType == SKIN_TYPE_FUR) ("As you examine your new elvish ears you feel fur grow around them, matching the rest of you.");
 				player.earType = EARS_ELFIN;
@@ -1603,6 +1603,7 @@ package classes.Scenes.Places.Bazaar
 						outputText("You feel an itching sensation as your fur beings to fall off in clumps, <b>revealing tough gray skin</b> beneath it.");
 						break;
 					case SKIN_TYPE_SCALES:
+					case SKIN_TYPE_DRACONIC:
 						outputText("You feel an odd rolling sensation as your scales begin to shift, spreading and reforming as they grow and disappear, <b>becoming tough gray skin</b>.");
 						break;
 					case SKIN_TYPE_GOO:

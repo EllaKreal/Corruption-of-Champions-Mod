@@ -848,6 +848,10 @@ public function saveGameObject(slot:String, isFile:Boolean):void
 		saveFile.data.antennae = player.antennae;
 		saveFile.data.horns = player.horns;
 		saveFile.data.hornType = player.hornType;
+		// <mod name="Predator arms" author="Stadler76">
+		saveFile.data.clawTone = player.clawTone;
+		saveFile.data.clawType = player.clawType;
+		// </mod>
 		saveFile.data.wingDesc = player.wingDesc;
 		saveFile.data.wingType = player.wingType;
 		saveFile.data.lowerBody = player.lowerBody;
@@ -1647,6 +1651,13 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 			player.skinAdj = saveFile.data.skinAdj;
 		player.skinTone = saveFile.data.skinTone;
 		player.skinDesc = saveFile.data.skinDesc;
+		//Silently discard SKIN_TYPE_UNDEFINED
+		if (player.skinType == SKIN_TYPE_UNDEFINED)
+		{
+			player.skinAdj = "";
+			player.skinDesc = "skin";
+			player.skinType = SKIN_TYPE_PLAIN;
+		}
 		//Convert from old skinDesc to new skinAdj + skinDesc!
 		if (player.skinDesc.indexOf("smooth") != -1)
 		{
@@ -1655,7 +1666,7 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 				player.skinDesc = "skin";
 			if (player.skinType == SKIN_TYPE_FUR)
 				player.skinDesc = "fur";
-			if (player.skinType == SKIN_TYPE_SCALES)
+			if (player.hasScales())
 				player.skinDesc = "scales";
 			if (player.skinType == SKIN_TYPE_GOO)
 				player.skinDesc = "goo";
@@ -1667,7 +1678,7 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 				player.skinDesc = "skin";
 			if (player.skinType == SKIN_TYPE_FUR)
 				player.skinDesc = "fur";
-			if (player.skinType == SKIN_TYPE_SCALES)
+			if (player.hasScales())
 				player.skinDesc = "scales";
 			if (player.skinType == SKIN_TYPE_GOO)
 				player.skinDesc = "goo";
@@ -1679,7 +1690,7 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 				player.skinDesc = "skin";
 			if (player.skinType == SKIN_TYPE_FUR)
 				player.skinDesc = "fur";
-			if (player.skinType == SKIN_TYPE_SCALES)
+			if (player.hasScales())
 				player.skinDesc = "scales";
 			if (player.skinType == SKIN_TYPE_GOO)
 				player.skinDesc = "goo";
@@ -1691,7 +1702,7 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 				player.skinDesc = "skin";
 			if (player.skinType == SKIN_TYPE_FUR)
 				player.skinDesc = "fur";
-			if (player.skinType == SKIN_TYPE_SCALES)
+			if (player.hasScales())
 				player.skinDesc = "scales";
 			if (player.skinType == SKIN_TYPE_GOO)
 				player.skinDesc = "goo";
@@ -1703,7 +1714,7 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 				player.skinDesc = "skin";
 			if (player.skinType == SKIN_TYPE_FUR)
 				player.skinDesc = "fur";
-			if (player.skinType == SKIN_TYPE_SCALES)
+			if (player.hasScales())
 				player.skinDesc = "scales";
 			if (player.skinType == SKIN_TYPE_GOO)
 				player.skinDesc = "goo";
@@ -1730,7 +1741,12 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 			player.hornType = HORNS_NONE;
 		else
 			player.hornType = saveFile.data.hornType;
-			
+
+		// <mod name="Predator arms" author="Stadler76">
+		player.clawTone = (saveFile.data.clawTone == undefined) ? ""               : saveFile.data.clawTone;
+		player.clawType = (saveFile.data.clawType == undefined) ? CLAW_TYPE_NORMAL : saveFile.data.clawType;
+		// </mod>
+
 		player.wingDesc = saveFile.data.wingDesc;
 		player.wingType = saveFile.data.wingType;
 		player.lowerBody = saveFile.data.lowerBody;
@@ -2276,6 +2292,8 @@ public function unFuckSave():void
 	if (isNaN(model.time.hours)) model.time.hours = 0;
 	if (isNaN(model.time.days)) model.time.days = 0;
 
+	if (player.gems < 0) player.gems = 0; //Force fix gems
+	
 	if (player.findStatusEffect(StatusEffects.SlimeCraving) >= 0 && player.statusEffectv4(StatusEffects.SlimeCraving) == 1) {
 		player.changeStatusValue(StatusEffects.SlimeCraving, 3, player.statusEffectv2(StatusEffects.SlimeCraving)); //Duplicate old combined strength/speed value
 		player.changeStatusValue(StatusEffects.SlimeCraving, 4, 1); //Value four indicates this tracks strength and speed separately

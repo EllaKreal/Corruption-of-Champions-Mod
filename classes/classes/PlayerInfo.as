@@ -335,6 +335,11 @@ package classes
 			// Begin Interpersonal Stats
 			var interpersonStats:String = "";
 			
+			if (flags[kFLAGS.ANZU_RELATIONSHIP_LEVEL] > 0) {
+				interpersonStats += "<b>Anzu Affection:</b> " + flags[kFLAGS.ANZU_AFFECTION] + "%\n";
+				interpersonStats += "<b>Anzu's Relationship Level:</b> " + (flags[kFLAGS.ANZU_RELATIONSHIP_LEVEL] == 1 ? "Acquaintances" : flags[kFLAGS.ANZU_RELATIONSHIP_LEVEL] == 2 ? "Friend" : flags[kFLAGS.ANZU_RELATIONSHIP_LEVEL] == 3 ? "Close Friend" : flags[kFLAGS.ANZU_RELATIONSHIP_LEVEL] == 4 ? "Lover" : "Undefined") + "\n";
+			}
+			
 			if (flags[kFLAGS.ARIAN_PARK] > 0)
 				interpersonStats += "<b>Arian's Health:</b> " + Math.round(getGame().arianScene.arianHealth()) + "\n";
 				
@@ -352,7 +357,9 @@ package classes
 				
 			if (getGame().emberScene.emberAffection() > 0)
 				interpersonStats += "<b>Ember Affection:</b> " + Math.round(getGame().emberScene.emberAffection()) + "%\n";
-			
+			if (getGame().emberScene.emberSparIntensity() > 0)
+				interpersonStats += "<b>Ember Spar Intensity:</b> " + getGame().emberScene.emberSparIntensity() + "\n";
+				
 			if (getGame().helFollower.helAffection() > 0)
 				interpersonStats += "<b>Helia Affection:</b> " + Math.round(getGame().helFollower.helAffection()) + "%\n";
 			if (getGame().helFollower.helAffection() >= 100)
