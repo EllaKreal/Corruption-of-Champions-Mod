@@ -3005,5 +3005,8 @@ public static const ITS_EVERY_DAY:int                                           
 public static const LOW_STANDARDS_FOR_ALL:int                                       = 2997;
 public static const HYPER_HAPPY:int                                                 = 2998;
 public static const KAIZO_MODE:int                                                  = 2999; // Kaizo CoC! Do you wanna have a bad time?
+// Hellspawn flags - thrown here for the time being
+public static const _modPLAYERCAMEBEFORERIDING:int                                  = 3000;
+public static const HELSPAWN_HADSEX:int                                             = 3001;
 	}    
 }
