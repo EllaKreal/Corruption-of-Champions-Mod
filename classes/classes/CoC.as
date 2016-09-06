@@ -172,7 +172,7 @@ the text from being too boring.
 		public var playerInfo:PlayerInfo = new PlayerInfo();
 		public var saves:Saves = new Saves(gameStateDirectGet, gameStateDirectSet);
 		// Items/
-		public var mutations:Mutations = new Mutations();
+		public var mutations:Mutations = Mutations.init();
 		public var consumables:ConsumableLib = new ConsumableLib();
 		public var useables:UseableLib;
 		public var weapons:WeaponLib = new WeaponLib();
@@ -214,7 +214,7 @@ the text from being too boring.
 		public var goblinAssassinScene:GoblinAssassinScene = new GoblinAssassinScene();
 		public var goblinWarriorScene:GoblinWarriorScene = new GoblinWarriorScene();
 		public var goblinShamanScene:GoblinShamanScene = new GoblinShamanScene();
-		public var goblinElderScene:GoblinElderScene = new GoblinElderScene();
+		public var goblinElderScene:PriscillaScene = new PriscillaScene();
 		public var impScene:ImpScene = new ImpScene();
 		public var mimicScene:MimicScene = new MimicScene();
 		public var succubusScene:SuccubusScene = new SuccubusScene();
@@ -281,7 +281,12 @@ the text from being too boring.
 		
 		public var mainViewManager:MainViewManager = new MainViewManager();
 		//Scenes in includes folder GONE! Huzzah!
-		
+
+		public var bindings:Bindings = new Bindings();
+		public var output:Output = Output.init();
+		public var measurements:Measurements = Measurements.init();
+		public function get currentText():String { return output.currentText; }
+		public function set currentText(text:String):void { output.currentText = text; }
 		/****
 			This is used purely for bodges while we get things cleaned up.
 			Hopefully, anything you stick to this object can be removed eventually.
@@ -302,6 +307,8 @@ the text from being too boring.
 		public var debug:Boolean;
 		public var ver:String;
 		public var version:String;
+		public var versionID:uint = 0;
+		public var permObjVersionID:uint = 0;
 		public var mobile:Boolean;
 		public var images:ImageManager;
 		public var player:Player;
@@ -309,20 +316,9 @@ the text from being too boring.
 		public var monster:Monster;
 		public var flags:DefaultDict;
 		public var achievements:DefaultDict;
-		private var gameState:int;
+		private var _gameState:int;
+		public function get gameState():int { return _gameState; }
 		public var time :TimeModel;
-		public var currentText:String;
-
-		public var explored:Boolean;
-		public var foundForest:Boolean;
-		public var foundDesert:Boolean;
-		public var foundMountain:Boolean;
-		public var foundLake:Boolean;
-		//These plot variables are to be replaced.
-		public var whitney:Number;
-		public var monk:Number;
-		public var sand:Number;
-		public var giacomo:int;
 
 		public var temp:int;
 		public var args:Array;
@@ -333,13 +329,13 @@ the text from being too boring.
 		public var kFLAGS_REF:*;
 		public var kACHIEVEMENTS_REF:*;
 		
-		public function get inCombat():Boolean { return gameState == 1; }
+		public function get inCombat():Boolean { return _gameState == 1; }
 		
-		public function set inCombat(value:Boolean):void { gameState = (value ? 1 : 0); }
+		public function set inCombat(value:Boolean):void { _gameState = (value ? 1 : 0); }
 		
-		private function gameStateDirectGet():int { return gameState; }
+		private function gameStateDirectGet():int { return _gameState; }
 		
-		private function gameStateDirectSet(value:int):void { gameState = value; }
+		private function gameStateDirectSet(value:int):void { _gameState = value; }
 		
 		public function rand(max:int):int
 		{
@@ -397,7 +393,7 @@ the text from being too boring.
 
 			//Version NUMBER
 			ver = "1.0.2_mod_1.4_dev";
-			version = ver + " (<b>Anzu's Palace Test</b>)";
+			version = ver + " (<b>I give up</b>)";
 
 			//Indicates if building for mobile?
 			mobile = false;
@@ -451,7 +447,7 @@ the text from being too boring.
 			//1 = in combat
 			//2 = in combat in grapple
 			//3 = at start or game over screen
-			gameState = 0;
+			_gameState = 0;
 
 			/**
 			 * Display Variables
@@ -480,16 +476,6 @@ the text from being too boring.
 			//{ region PlotVariables
 
 			//Plot variables
-			explored = false;
-			foundForest = false;
-			foundDesert = false;
-			foundMountain = false;
-			foundLake = false;
-			whitney = 0;
-			monk = 0;
-			sand = 0;
-			giacomo = 0;
-//Replaced by flag			beeProgress = 0;
 
 //			itemStorage = [];
 //			gearStorage = [];

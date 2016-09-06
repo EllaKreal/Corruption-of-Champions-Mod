@@ -6,9 +6,17 @@
 
 	public final class Mutations extends MutationsHelper
 	{
+		private static var _instance:Mutations = new Mutations();
+
 		public function Mutations()
 		{
+			if (_instance != null)
+			{
+				throw new Error("Mutations can only be accessed through Mutations.init()");
+			}
 		}
+
+		public static function init():Mutations { return _instance; }
 
 		import classes.GlobalFlags.kGAMECLASS;
 		import classes.GlobalFlags.kACHIEVEMENTS;
@@ -87,7 +95,8 @@
 		/* ITEMZZZZZ FUNCTIONS GO HERE */
 		public function incubiDraft(tainted:Boolean,player:Player):void
 		{
-			
+			var tfSource:String = "incubiDraft";
+			if (!tainted) tfSource += "-purified";
 			player.slimeFeed();
 			var temp2:Number = 0;
 			var temp3:Number = 0;
@@ -247,6 +256,7 @@
 					player.shrinkTits();
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Demonic changes - higher chance with higher corruption.
 			if (rand(40) + player.cor / 3 > 35 && tainted) demonChanges(player);
 			player.genderCheck();
@@ -358,7 +368,7 @@
 				if (flags[kFLAGS.MINOTAUR_CUM_ADDICTION_TRACKER] < 50) outputText("  It makes you feel dizzy, ditzy, and placid.", false);
 				else outputText("  It makes you feel euphoric, happy, and willing to do ANYTHING to keep feeling this way.", false);
 			}
-			else outputText("  You know that the bottle is purified and you're positive you won't get any addictiction from this bottle.");
+			else outputText("  You know that the bottle is purified and you're positive you won't get any addiction from this bottle.");
 			outputText("  Unbidden, your hand brings the bottle to your lips, and the heady taste fills your mouth as you convulsively swallow the entire bottle.", false);
 			//-Raises lust by 10.
 			//-Raises sensitivity
@@ -415,6 +425,7 @@
 
 		public function minotaurBlood(player:Player):void
 		{
+			var tfSource:String = "minotaurBlood";
 			player.slimeFeed();
 			//Changes done
 			changes = 0;
@@ -509,8 +520,9 @@
 				}
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Restore arms to become human arms again
-			restoreArms();
+			if (rand(4) == 0) restoreArms(tfSource);
 			//+hooves
 			if (player.lowerBody != LOWER_BODY_TYPE_HOOFED) {
 				if (changes < changeLimit && rand(3) == 0) {
@@ -796,11 +808,9 @@
 				player.tailType = TAIL_TYPE_COW;
 				changes++;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
+
 			if (changes < changeLimit && rand(4) == 0 && ((player.ass.analWetness > 0 && player.findPerk(PerkLib.MaraesGiftButtslut) < 0) || player.ass.analWetness > 1)) {
 				outputText("\n\nYou feel a tightening up in your colon and your [asshole] sucks into itself.  You feel sharp pain at first but that thankfully fades.  Your ass seems to have dried and tightened up.");
 				player.ass.analWetness--;
@@ -826,6 +836,7 @@
 		
 		public function equinum(player:Player):void
 		{
+			var tfSource:String = "equinum";
 			player.slimeFeed();
 			//Changes done
 			changes = 0;
@@ -843,6 +854,9 @@
 			if (player.findPerk(PerkLib.HistoryAlchemist) >= 0) changeLimit++;
 			if (player.findPerk(PerkLib.TransformationResistance) >= 0) changeLimit--;
 			//Used for random chances
+			// Maybe we should implement new Enums for furcolors and probably other colors and tones?
+			// For example: FurColorsEnum.HORSE, ScaleColorsEnum.LIZARD, SkinTonesEnum.HUMAN, SkinTonesEnum:SALAMANDER, HairColorsEnum.HUMAN and so on (Stadler76)
+			var horseFurColors:Array = ["brown", "chocolate", "auburn", "sandy brown", "caramel", "peach", "black", "midnight black", "dark gray", "gray", "light gray", "silver", "white", "brown and white", "black and white"];
 			//Set up output
 			outputText("You down the potion, grimacing at the strong taste.", true);
 			//CHANCE OF BAD END - 20% if face/tail/skin/cock are appropriate.
@@ -961,8 +975,9 @@
 					changes++;
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Restore arms to become human arms again
-			restoreArms();
+			if (rand(4) == 0) restoreArms(tfSource);
 			//Remove feathery hair
 			removeFeatheryHair();
 			//
@@ -1247,15 +1262,15 @@
 			}
 			//Fur - if has horsetail && ears and not at changelimit
 			if (player.skinType != SKIN_TYPE_FUR && changes < changeLimit && rand(4) == 0 && player.tailType == TAIL_TYPE_HORSE) {
-				if (player.skinType == SKIN_TYPE_PLAIN) outputText("\n\nAn itchy feeling springs up over every inch of your skin.  As you scratch yourself madly, you feel fur grow out of your skin until <b>you have a fine coat of " + player.hairColor + "-colored fur.</b>", false);
+				player.setFurColor(horseFurColors, true);
+				if (player.skinType == SKIN_TYPE_PLAIN) outputText("\n\nAn itchy feeling springs up over every inch of your skin.  As you scratch yourself madly, you feel fur grow out of your skin until <b>you have a fine coat of " + player.newFurColor + "-colored fur.</b>");
 				if (player.hasScales()) {
 					player.skinDesc = "fur";
-					outputText("\n\nYour " + player.skinTone + " scales begin to itch insufferably.  You reflexively scratch yourself, setting off an avalanche of discarded scales.  The itching intensifies as you madly scratch and tear at yourself, revealing a coat of " + player.hairColor + " " + player.skinDesc + ".  At last the itching stops as <b>you brush a few more loose scales from your new coat of fur.</b>", false);
+					outputText("\n\nYour " + player.skinTone + " scales begin to itch insufferably.  You reflexively scratch yourself, setting off an avalanche of discarded scales.  The itching intensifies as you madly scratch and tear at yourself, revealing a coat of " + player.newFurColor + " " + player.skinDesc + ".  At last the itching stops as <b>you brush a few more loose scales from your new coat of " + player.newFurColor + "-colored fur.</b>");
 				}
 				changes++;
 				player.skinType = SKIN_TYPE_FUR;
 				player.skinDesc = "fur";
-				player.setFurColor(["brown", "chocolate", "auburn", "sandy brown", "caramel", "peach", "black", "midnight black", "dark gray", "gray", "light gray", "silver", "white", "brown and white", "black and white"]);
 			}
 			//Ears - requires tail
 			if (player.earType != EARS_HORSE && player.tailType == TAIL_TYPE_HORSE && changes < changeLimit && rand(3) == 0) {
@@ -1291,11 +1306,9 @@
 				player.tailRecharge = 0;
 				changes++;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
+
 			if (rand(3) == 0) outputText(player.modTone(60, 1), false);
 			//FAILSAFE CHANGE
 			if (changes == 0) {
@@ -1359,6 +1372,8 @@
 		
 		public function succubiMilk(tainted:Boolean,player:Player):void
 		{
+			var tfSource:String = "succubiMilk";
+			if (!tainted) tfSource += "-purified";
 			player.slimeFeed();
 			var temp2:Number = 0;
 			var temp3:Number = 0;
@@ -1547,10 +1562,12 @@
 					if (temp == 3 || temp == 4 || temp == 5) player.skinTone = "purple";
 					if (temp > 5) player.skinTone = "blue";
 					outputText("\n\nA tingling sensation runs across your skin in waves, growing stronger as <b>your skin's tone slowly shifts, darkening to become " + player.skinTone + " in color.</b>", false);
+					updateClaws(player.clawType);
 					if (tainted) dynStats("cor", 1);
 					else dynStats("cor", 0);
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Demonic changes - higher chance with higher corruption.
 			if (rand(40) + player.cor / 3 > 35 && tainted) demonChanges(player);
 			if (tainted) {
@@ -1572,6 +1589,16 @@
 //5-Bulbous Pepper (+ball size or fresh balls)
 		public function caninePepper(type:Number,player:Player):void
 		{
+			var tfSource:String = "caninePepper";
+			if (player.findPerk(PerkLib.Hellfire)) tfSource += "-hellfire";
+			switch (type) {
+				case 5:  tfSource += "-bulbous";   break;
+				case 4:  tfSource += "-knotty";    break;
+				case 3:  tfSource += "-black";     break;
+				case 2:  tfSource += "-double";    break;
+				case 1:  tfSource += "-oversized"; break;
+				default: // type == 0 --> Canine Pepper
+			}
 			var temp2:Number = 0;
 			var temp3:Number = 0;
 			var crit:Number = 1;
@@ -1661,8 +1688,9 @@
 				outputText("dumber.", false);
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Restore arms to become human arms again
-			restoreArms();
+			if (rand(4) == 0) restoreArms(tfSource);
 			//Remove feathery hair
 			removeFeatheryHair();
 			//if (type != 2 && type != 4 && type != 5) outputText("\n", false);
@@ -2215,11 +2243,9 @@
 				player.tailType = TAIL_TYPE_DOG;
 				outputText("<b>You now have a dog-tail.</b>", false);
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
+
 			if (player.skinType == SKIN_TYPE_FUR && changes < changeLimit && rand(3) == 0) {
 				outputText("\n\nYou become more... solid.  Sinewy.  A memory comes unbidden from your youth of a grizzled wolf you encountered while hunting, covered in scars, yet still moving with an easy grace.  You imagine that must have felt something like this.", false);
 				dynStats("tou", 4, "sen", -3);
@@ -2236,6 +2262,7 @@
 
 		public function impFood(player:Player):void
 		{
+			var tfSource:String = "impFood";
 			clearOutput();
 			if (player.cocks.length > 0) {
 				outputText("The food tastes strange and corrupt - you can't really think of a better word for it, but it's unclean.", false);
@@ -2260,6 +2287,7 @@
 					if (rand(2) == 0) player.skinTone = "red";
 					else player.skinTone = "orange";
 					outputText("begins to lose its color, fading until you're as white as an albino.  Then, starting at the crown of your head, a reddish hue rolls down your body in a wave, turning you completely " + player.skinTone + ".", false);
+					updateClaws(player.clawType);
 				}
 				return;
 			}
@@ -2276,6 +2304,7 @@
 				if (rand(2) == 0) player.skinTone = "red";
 				else player.skinTone = "orange";
 				outputText("begins to lose its color, fading until you're as white as an albino.  Then, starting at the crown of your head, a reddish hue rolls down your body in a wave, turning you completely " + player.skinTone + ".", false);
+				updateClaws(player.clawType);
 			}
 
 			//Shrinkage!
@@ -2283,6 +2312,9 @@
 				outputText("\n\nYour skin crawls, making you close your eyes and shiver.  When you open them again the world seems... different.  After a bit of investigation, you realize you've become shorter!", false);
 				player.tallness -= 1 + rand(3);
 			}
+			changes = 0;
+			changeLimit = 1;
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 		}
 	
 		//pureHoney moved to BeeHoney.as
@@ -2840,6 +2872,7 @@
 					player.skinAdj = "smooth";
 					if (player.skinTone == "rough gray") player.skinTone = "gray";
 					player.skinType = SKIN_TYPE_PLAIN;
+					updateClaws(player.clawType);
 				}
 				//chance of hair change
 				else {
@@ -2893,6 +2926,7 @@
 					player.skinAdj = "smooth";
 					if (player.skinTone == "rough gray") player.skinTone = "gray";
 					player.skinType = SKIN_TYPE_PLAIN;
+					updateClaws(player.clawType);
 				}
 				//chance of hair change
 				else {
@@ -3063,6 +3097,7 @@
 		 */
 		public function laBova(tainted:Boolean,enhanced:Boolean,player:Player):void
 		{
+			var tfSource:String = "laBova";
 			player.slimeFeed();
 			//Changes done
 			changes = 0;
@@ -3315,6 +3350,7 @@
 					dynStats("lus", 10);
 				}
 			}
+			if (tainted && rand(5) == 0) updateOvipositionPerk(tfSource);
 			//General Appearance (Tail -> Ears -> Paws(fur stripper) -> Face -> Horns
 			//Give the player a bovine tail, same as the minotaur
 			if (tainted && player.tailType != TAIL_TYPE_COW && changes < changeLimit && rand(3) == 0) {
@@ -3433,11 +3469,9 @@
 					changes++;
 				}
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
+
 			//Increase the size of the player's ass (less likely then hips), if it is not already somewhat big
 			if (rand(2) == 0 && player.buttRating < 13 && changes < changeLimit) {
 				if (!tainted && player.buttRating < 8 || tainted) {
@@ -3582,6 +3616,7 @@
 
 		public function goblinAle(player:Player):void
 		{
+			var tfSource:String = "goblinAle";
 			player.slimeFeed();
 			changes = 0;
 			changeLimit = 1;
@@ -3626,8 +3661,9 @@
 				outputText("\n\nYou feel like dancing, and stumble as your legs react more quickly than you'd think.  Is the alcohol slowing you down or are you really faster?  You take a step and nearly faceplant as you go off balance.  It's definitely both.", false);
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Restore arms to become human arms again
-			restoreArms();
+			if (rand(4) == 0) restoreArms(tfSource);
 			//SEXYTIEMS
 			//Multidick killa!
 			if (player.cocks.length > 1 && rand(3) == 0 && changes < changeLimit) {
@@ -3721,6 +3757,7 @@
 					if (rand(2) == 0) player.skinTone = "pale yellow";
 					else player.skinTone = "grayish-blue";
 				}
+				updateClaws(player.clawType);
 				changes++;
 				outputText("\n\nWhoah, that was weird.  You just hallucinated that your ", false);
 				if (player.skinType == SKIN_TYPE_FUR) outputText("skin", false);
@@ -3739,11 +3776,9 @@
 				changes++;
 				player.earType = EARS_ELFIN;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
+
 			//Nipples Turn Back:
 			if (player.findStatusEffect(StatusEffects.BlackNipples) >= 0 && changes < changeLimit && rand(3) == 0) {
 				outputText("\n\nSomething invisible brushes against your " + player.nippleDescript(0) + ", making you twitch.  Undoing your clothes, you take a look at your chest and find that your nipples have turned back to their natural flesh colour.");
@@ -3772,6 +3807,7 @@
 
 		public function gooGasmic(player:Player):void
 		{
+			var tfSource:String = "gooGasmic";
 			outputText("You take the wet cloth in hand and rub it over your body, smearing the strange slime over your " + player.skinDesc + " slowly.", true);
 			//Stat changes
 			//libido up to 80
@@ -3796,6 +3832,7 @@
 			 if (player.vaginalCapacity() >= 9000) goopiness++;
 			 }*/
 			//Cosmetic changes based on 'goopyness'
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Remove wings
 			if (player.wingType > WING_TYPE_NONE) {
 				if (player.wingType == WING_TYPE_SHARK_FIN) outputText("\n\nYou sigh, feeling a hot wet tingling down your back.  It tickles slightly as you feel your fin slowly turn to sludge, dripping to the ground as your body becomes more goo-like.", false);
@@ -3851,7 +3888,7 @@
 					else if (blaht <= 8) player.skinTone = "cerulean";
 					else player.skinTone = "emerald";
 					outputText(player.skinTone + "!");
-					restoreArms(null, RESTOREARMS_FROMGOOSKINTF);
+					if (player.armType != ARM_TYPE_HUMAN || player.clawType != CLAW_TYPE_NORMAL) restoreArms(tfSource);
 				}
 				return;
 			}
@@ -3911,6 +3948,8 @@
 
 		public function sharkTooth(type:Number,player:Player):void
 		{
+			var tfSource:String = "sharkTooth";
+			if (type == 1) tfSource += "-tigershark";
 			changes = 0;
 			changeLimit = 2;
 			if (rand(2) == 0) changeLimit++;
@@ -3996,6 +4035,7 @@
 				dynStats("lib", 2, "sen", 3, "lus", 10);
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Transformations:
 			//Mouth TF
 			if (player.faceType != FACE_SHARK_TEETH && rand(3) == 0 && changes < changeLimit) {
@@ -4006,7 +4046,7 @@
 				changes++;
 			}
 			//Remove odd eyes
-			if (changes < changeLimit && rand(5) == 0 && player.eyeType > EYES_HUMAN) {
+			if (changes < changeLimit && rand(5) == 0 && player.eyeType != EYES_HUMAN) {
 				if (player.eyeType == EYES_BLACK_EYES_SAND_TRAP) {
 					outputText("\n\nYou feel a twinge in your eyes and you blink.  It feels like black cataracts have just fallen away from you, and you know without needing to see your reflection that your eyes have gone back to looking human.");
 				}
@@ -4025,6 +4065,9 @@
 				else outputText("\n\nJets of pain shoot down your spine into your tail.  You feel the tail bulging out until it explodes into a large and flexible shark-tail.  You swish it about experimentally, and find it quite easy to control.", false);
 				player.tailType = TAIL_TYPE_SHARK;
 			}
+			//Gills TF
+			if (player.gillType != GILLS_FISH && player.tailType == TAIL_TYPE_SHARK && player.faceType == FACE_SHARK_TEETH && changes < changeLimit && rand(3) == 0)
+				updateGills(GILLS_FISH);
 			//Hair
 			if (player.hairColor != "silver" && rand(4) == 0 && changes < changeLimit) {
 				changes++;
@@ -4042,6 +4085,7 @@
 					player.skinType = SKIN_TYPE_PLAIN;
 					player.skinDesc = "skin";
 					player.skinTone = "rough gray";
+					updateClaws(player.clawType);
 					changes++;
 				}
 				else {
@@ -4049,6 +4093,7 @@
 					player.skinType = SKIN_TYPE_PLAIN;
 					player.skinDesc = "skin";
 					player.skinTone = "orange and black striped";
+					updateClaws(player.clawType);
 					changes++;
 				}
 			}
@@ -4094,6 +4139,7 @@
 
 		public function snakeOil(player:Player):void
 		{
+			var tfSource:String = "snakeOil";
 			player.slimeFeed();
 			clearOutput();
 			changes = 0;
@@ -4113,6 +4159,7 @@
 				if (player.spe < 40) outputText("  Of course, you're nowhere near as fast as that.", false);
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Removes wings
 			if (player.wingType > WING_TYPE_NONE && rand(3) == 0 && changes < changeLimit) {
 				if (player.wingType == WING_TYPE_SHARK_FIN) outputText("\n\nA wave of tightness spreads through your back, and it feels as if someone is stabbing a dagger into your spine.  After a moment the pain passes, though your fin is gone!", false);
@@ -4152,11 +4199,8 @@
 				player.legCount = 1;
 				changes++;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 
 			//9e) Penis
 			/*
@@ -4211,6 +4255,7 @@
 
 		public function superHummus(player:Player):void
 		{
+			var tfSource:String = "superHummus";
 			clearOutput();
 			if (debug) {
 				outputText("You're about to eat the humus when you see it has bugs in it. Not wanting to eat bugged humus or try to debug it you throw it into the portal and find something else to eat.", false);
@@ -4235,6 +4280,7 @@
 				outputText("\n\nYou cry out as the world spins around you.  You're aware of your entire body sliding and slipping, changing and morphing, but in the sea of sensation you have no idea exactly what's changing.  You nearly black out, and then it's over.  Maybe you had best have a look at yourself and see what changed?", false);
 			}
 			player.armType = ARM_TYPE_HUMAN;
+			updateClaws();
 			player.eyeType = EYES_HUMAN;
 			player.antennae = ANTENNAE_NONE;
 			player.faceType = FACE_HUMAN;
@@ -4251,7 +4297,6 @@
 			player.skinType = SKIN_TYPE_PLAIN;
 			player.skinDesc = "skin";
 			player.skinAdj = "";
-			player.armType = ARM_TYPE_HUMAN;
 			player.tongueType = TONGUE_HUMAN;
 			player.eyeType = EYES_HUMAN;
 			if (player.fertility > 15) player.fertility = 15;
@@ -4302,15 +4347,17 @@
 				player.breastRows[0].breastRating = 2;
 			}
 			else player.breastRows[0].breastRating = 0;
-			player.gills = false;
+			player.gillType = GILLS_NONE;
 			player.removeStatusEffect(StatusEffects.Uniball);
 			player.removeStatusEffect(StatusEffects.BlackNipples);
 			player.vaginaType(0);
-		}		
+			updateOvipositionPerk(tfSource);
+		}
 		
 		//Normal hummus
 		public function regularHummus(player:Player):void
 		{
+			var tfSource:String = "regularHummus";
 			player.slimeFeed();
 			clearOutput();
 			changes = 0;
@@ -4332,10 +4379,12 @@
 			// MAJOR TRANSFORMATIONS
 			//-----------------------
 			//1st priority: Change lower body to bipedal.
-			if (rand(4) == 0) restoreFeet(null, RESTOREFEET_FIXBIPED);
+			if (rand(4) == 0 && changes < changeLimit) restoreLegs(tfSource);
+			//Remove Oviposition Perk
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Remove Incorporeality Perk
-			if (player.findPerk(PerkLib.Incorporeality) >= 0 && changes < changeLimit && rand(10) == 0) {
-				outputText("\n\nYou feel a strange sensation in your [legs] as they start to feel more solid. They become more opaque until finally, you can no longer see through your [legs]. \n<b>(Perk Lost: Incorporeality!)</b>", false);
+			if (player.findPerk(PerkLib.Incorporeality) >= 0 && player.perkv4(PerkLib.Incorporeality) == 0 && changes < changeLimit && rand(10) == 0) {
+				outputText("\n\nYou feel a strange sensation in your [legs] as they start to feel more solid. They become more opaque until finally, you can no longer see through your [legs]. \n<b>(Perk Lost: Incorporeality!)</b>");
 				player.removePerk(PerkLib.Incorporeality);
 				changes++;
 			}
@@ -4352,6 +4401,7 @@
 				else if (temp == 2) player.skinTone = "dark";
 				else if (temp == 3) player.skinTone = "light";
 				outputText(player.skinTone + " colored.</b>", false);
+				updateClaws(player.clawType);
 			}
 			//Change skin to normal
 			if (player.skinType != SKIN_TYPE_PLAIN && (player.earType == EARS_HUMAN || player.earType == EARS_ELFIN) && rand(4) == 0 && changes < changeLimit) {
@@ -4361,11 +4411,12 @@
 				outputText(" falling to the ground, revealing flawless skin below.  <b>You now have normal skin.</b>", false);
 
 				player.skinType = SKIN_TYPE_PLAIN;
+				player.skinAdj = "";
 				player.skinDesc = "skin";
 				changes++;
 			}
 			//Restore arms to become human arms again
-			restoreArms();
+			if (rand(4) == 0) restoreArms(tfSource);
 			//-----------------------
 			// MINOR TRANSFORMATIONS
 			//-----------------------
@@ -4401,11 +4452,7 @@
 				changes++;
 			}
 			//Removes gills
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 			//Nipples Turn Back:
 			if (player.findStatusEffect(StatusEffects.BlackNipples) >= 0 && changes < changeLimit && rand(3) == 0) {
 				outputText("\n\nSomething invisible brushes against your " + player.nippleDescript(0) + ", making you twitch.  Undoing your clothes, you take a look at your chest and find that your nipples have turned back to their natural flesh colour.");
@@ -4570,23 +4617,30 @@
 			}
 			//Fertility Decrease:
 			if (player.hasVagina() && rand(3) == 0 && changes < changeLimit) {
-				outputText("\n\nThe vague numbness in your skin sinks slowly downwards, and you put a hand on your lower stomach as the sensation centers itself there.  ");
-				dynStats("sen", -2);
-				//High fertility:
-				if (player.fertility >= 30) outputText("It feels like your overcharged reproductive organs have simmered down a bit.");
-				//Average fertility:
-				else if (player.fertility >= 10) outputText("You feel like you have dried up a bit inside; you are left feeling oddly tranquil.");
-				//[Low/No fertility:
-				else {
-					outputText("Although the numbness makes you feel serene, the hummus has no effect upon your ");
-					if (player.fertility > 0) outputText("mostly ");
-					outputText("sterile system.");
-					if (player.cor > 70) outputText("  For some reason the fact that you cannot function as nature intended makes you feel helpless and submissive.  Perhaps the only way to be a useful creature now is to find a dominant, fertile being willing to plow you full of eggs? You shake the alien, yet oddly alluring thought away.");
+				var tempChanges:int = 0;
+				if (player.sens > 10) {
+					outputText("\n\nThe vague numbness in your skin sinks slowly downwards, and you put a hand on your lower stomach as the sensation centers itself there.  ");
+					dynStats("sen", -2);
+					tempChanges = 1;
 				}
-				player.fertility -= 1 + rand(3);
-				if (player.fertility < 10 && player.gender >= 2) player.fertility = 10;
-				if (player.fertility < 5) player.fertility = 5;
-				changes++;
+				if (player.fertility > 10 || (player.fertility > 5 && (player.gender & GENDER_FEMALE) == 0)) {
+					//High fertility:
+					if (player.fertility >= 30) outputText("It feels like your overcharged reproductive organs have simmered down a bit.");
+					//Average fertility:
+					else if (player.fertility >= 10) outputText("You feel like you have dried up a bit inside; you are left feeling oddly tranquil.");
+					//[Low/No fertility:
+					else {
+						outputText("Although the numbness makes you feel serene, the hummus has no effect upon your ");
+						if (player.fertility > 0) outputText("mostly ");
+						outputText("sterile system.");
+						if (player.cor > 70) outputText("  For some reason the fact that you cannot function as nature intended makes you feel helpless and submissive.  Perhaps the only way to be a useful creature now is to find a dominant, fertile being willing to plow you full of eggs? You shake the alien, yet oddly alluring thought away.");
+					}
+					player.fertility -= 1 + rand(3);
+					if (player.fertility < 10 && (player.gender & GENDER_FEMALE) > 0) player.fertility = 10;
+					if (player.fertility < 5) player.fertility = 5;
+					tempChanges = 1;
+				}
+				changes += tempChanges;
 			}
 			//Cum Multiplier Decrease:
 			if (player.hasCock() && player.cumMultiplier > 5 && rand(3) == 0 && changes < changeLimit) {
@@ -4631,6 +4685,9 @@
 
 		public function catTransformation(player:Player):void
 		{
+			var tfSource:String = "catTransformation";
+			if (player.hasScales() && player.hasDragonWings() && player.tongueType == TONGUE_DRACONIC)
+				tfSource = "catTransformation-dragonne";
 			changes = 0;
 			changeLimit = 1;
 			var temp2:Number = 0;
@@ -4845,6 +4902,7 @@
 					changes++;
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Body type changes.  Teh rarest of the rare.
 			//DA EARZ
 			if (player.earType != EARS_CAT && rand(5) == 0 && changes < changeLimit) {
@@ -4909,11 +4967,8 @@
 				player.faceType = FACE_CAT;
 				changes++;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 			//FAILSAFE CHANGE
 			if (changes == 0) {
 				outputText("\n\nInhuman vitality spreads through your body, invigorating you!\n", false);
@@ -4932,6 +4987,12 @@
 
 		public function reptilum(player:Player):void
 		{
+			var tfSource:String = "reptilum";
+			if (player.hasDragonWingsAndFire())
+				tfSource += player.isBasilisk() ? "-dracolisk" : "-dragonewt";
+			else
+				tfSource += player.isBasilisk() ? "-basilisk"  : "-lizan";
+			//if (player.isTaur()) tfSource += "-taur";
 			player.slimeFeed();
 			//init variables
 			changes = 0;
@@ -5128,79 +5189,15 @@
 				}
 			}
 			//-VAGs
-			if (player.hasVagina() && player.findPerk(PerkLib.Oviposition) < 0 && changes < changeLimit && rand(5) == 0 && player.lizardScore() > 3) {
-				outputText("\n\nDeep inside yourself there is a change.  It makes you feel a little woozy, but passes quickly.  Beyond that, you aren't sure exactly what just happened, but you are sure it originated from your womb.\n", false);
-				outputText("(<b>Perk Gained: Oviposition</b>)", false);
-				player.createPerk(PerkLib.Oviposition, 0, 0, 0, 0);
-				changes++;
-			}
+			if (player.hasVagina() && rand(5) == 0 && player.lizardScore() > 3)
+				updateOvipositionPerk(tfSource); // does all the magic, nuff said!
 
 			//Physical changes:
 			//-Existing horns become draconic, max of 4, max length of 1'
-			if (player.hornType != HORNS_DRACONIC_X4_12_INCH_LONG && changes < changeLimit && rand(5) == 0) {
-				//No dragon horns yet.
-				if (player.hornType != HORNS_DRACONIC_X2 && player.hornType != HORNS_DRACONIC_X4_12_INCH_LONG) {
-					//Already have horns
-					if (player.horns > 0) {
-						//High quantity demon horns
-						if (player.hornType == HORNS_DEMON && player.horns > 4) {
-							outputText("\n\nYour horns condense, twisting around each other and merging into larger, pointed protrusions.  By the time they finish you have four draconic-looking horns, each about twelve inches long.", false);
-							player.horns = 12;
-							player.hornType = HORNS_DRACONIC_X4_12_INCH_LONG;
-						}
-						else {
-							outputText("\n\nYou feel your horns changing and warping, and reach back to touch them.  They have a slight curve and a gradual taper.  They must look something like the horns the dragons in your village's legends always had.", false);
-							player.hornType = HORNS_DRACONIC_X2;
-							if (player.horns > 13) {
-								outputText("  The change seems to have shrunken the horns, they're about a foot long now.", false);
-								player.horns = 12;
-							}
-
-						}
-						changes++;
-					}
-					//No horns
-					else {
-						//-If no horns, grow a pair
-						outputText("\n\nWith painful pressure, the skin on the sides of your forehead splits around two tiny nub-like horns.  They're angled back in such a way as to resemble those you saw on the dragons in your village's legends.  A few inches of horn sprout from your head before stopping.  <b>You have about four inches of dragon-like horn.</b>", false);
-						player.horns = 4;
-						player.hornType = HORNS_DRACONIC_X2;
-
-						changes++;
-					}
-				}
-				//ALREADY DRAGON
-				else {
-					if (player.hornType == HORNS_DRACONIC_X2) {
-						if (player.horns < 12) {
-							if (rand(2) == 0) {
-								outputText("\n\nYou get a headache as an inch of fresh horn escapes from your pounding skull.", false);
-								player.horns += 1;
-							}
-							else {
-								outputText("\n\nYour head aches as your horns grow a few inches longer.  They get even thicker about the base, giving you a menacing appearance.", false);
-								player.horns += 2 + rand(4);
-							}
-							if (player.horns >= 12) outputText("  <b>Your horns settle down quickly, as if they're reached their full size.</b>", false);
-							changes++;
-						}
-						//maxxed out, new row
-						else {
-							//--Next horn growth adds second row and brings length up to 12\"
-							outputText("\n\nA second row of horns erupts under the first, and though they are narrower, they grow nearly as long as your first row before they stop.  A sense of finality settles over you.  <b>You have as many horns as a lizan can grow.</b>", false);
-							player.hornType = HORNS_DRACONIC_X4_12_INCH_LONG;
-							changes++;
-						}
-					}
-				}
-			}
-			//-Hair stops growing!
-			if (flags[kFLAGS.HAIR_GROWTH_STOPPED_BECAUSE_LIZARD] == 0 && changes < changeLimit && rand(4) == 0) {
-				outputText("\n\nYour scalp tingles oddly.  In a panic, you reach up to your " + player.hairDescript() + ", but thankfully it appears unchanged.\n\n", false);
-				outputText("(<b>Your hair has stopped growing.</b>)", false);
-				changes++;
-				flags[kFLAGS.HAIR_GROWTH_STOPPED_BECAUSE_LIZARD]++;
-			}
+			if (!player.hasDragonHorns(true) && changes < changeLimit && rand(5) == 0)
+				gainDraconicHorns(tfSource);
+			//-Hair changes
+			if (changes < changeLimit && rand(4) == 0) lizardHairChange(tfSource);
 			//Remove beard!
 			if (player.hasBeard() && changes < changeLimit && rand(3) == 0) {
 				outputText("\n\nYour " + player.beardDescript() + " feels looser and looser until finally, your beard falls out.  ");
@@ -5227,16 +5224,16 @@
 			// <mod name="Predator arms" author="Stadler76">
 			//Gain predator arms
 			if (player.armType != ARM_TYPE_PREDATOR && player.hasScales() && player.lowerBody == LOWER_BODY_TYPE_LIZARD && changes < changeLimit && rand(3) == 0) {
-				outputText("\n\nYou scratch your biceps absentmindedly, but no matter how much you scratch, you can't get rid of the itch.  After a longer moment of ignoring it you finally glance down in irritation, only to discover that your arms former appearance has changed into those of some reptilian killer with " + player.skinFurScales() + " and short claws replacing your fingernails.");
-				outputText("\n<b>You now have reptilian arms.</b>", false);
 				player.armType = ARM_TYPE_PREDATOR;
-				player.clawType = CLAW_TYPE_LIZARD;
+				updateClaws(CLAW_TYPE_LIZARD);
+				outputText("\n\nYou scratch your biceps absentmindedly, but no matter how much you scratch, you can't get rid of the itch.  After a longer moment of ignoring it you finally glance down in irritation, only to discover that your arms former appearance has changed into those of some reptilian killer with " + player.skinFurScales() + " and short " + player.clawTone + " claws replacing your fingernails.");
+				outputText("\n<b>You now have reptilian arms.</b>");
 				changes++
 			}
 			//Claw transition
 			if (player.armType == ARM_TYPE_PREDATOR && player.skinType == SKIN_TYPE_SCALES && player.clawType != CLAW_TYPE_LIZARD && changes < changeLimit && rand(3) == 0) {
 				outputText("\n\nYour " + player.claws() + " change a little to become reptilian.");
-				player.clawType = CLAW_TYPE_LIZARD;
+				updateClaws(CLAW_TYPE_LIZARD);
 				outputText(" <b>You now have " + player.claws() + ".</b>");
 				changes++
 			}
@@ -5274,17 +5271,20 @@
 				//(fur)
 				if (player.skinType == SKIN_TYPE_FUR) {
 					player.skinTone = newLizardSkinTone();
+					updateClaws(player.clawType);
 					outputText("\n\nYou scratch yourself, and come away with a large clump of " + player.furColor + " fur.  Panicked, you look down and realize that your fur is falling out in huge clumps.  It itches like mad, and you scratch your body relentlessly, shedding the remaining fur with alarming speed.  Underneath the fur your skin feels incredibly smooth, and as more and more of the stuff comes off, you discover a seamless layer of " + player.skinTone + " scales covering most of your body.  The rest of the fur is easy to remove.  <b>You're now covered in scales from head to toe.</b>", false);
 				}
 				else if (player.skinType == SKIN_TYPE_DRACONIC) {
 					outputText("\n\nPrickling discomfort suddenly erupts all over your body, like every last inch of your skin has suddenly developed pins and needles.  You scratch yourself, hoping for relief; and when you look at your hands you notice small fragments of your " + player.skinFurScales() + " hanging from your fingers.  Nevertheless you continue to scratch yourself, and when you're finally done, you look yourself over. New scales have grown to replace your peeled off " + player.skinFurScales() + ".  <b>You're covered from head to toe in shiny ");
 					player.skinTone = newLizardSkinTone();
+					updateClaws(player.clawType);
 					outputText(player.skinTone + " scales.</b>", false);
 				}
 				//(no fur)
 				else {
 					outputText("\n\nYou idly reach back to scratch yourself and nearly jump out of your " + player.armorName + " when you hit something hard.  A quick glance down reveals that scales are growing out of your " + player.skinTone + " skin with alarming speed.  As you watch, the surface of your skin is covered in smooth scales.  They interlink together so well that they may as well be seamless.  You peel back your " + player.armorName + " and the transformation has already finished on the rest of your body.  <b>You're covered from head to toe in shiny ", false);
 					player.skinTone = newLizardSkinTone();
+					updateClaws(player.clawType);
 					outputText(player.skinTone + " scales.</b>", false);
 				}
 				player.skinType = SKIN_TYPE_SCALES;
@@ -5298,16 +5298,12 @@
 				player.faceType = FACE_LIZARD;
 			}
 			//-Snake tongue
-			if (player.faceType == FACE_LIZARD && rand(3) == 0) gainSnakeTongue();
+			if (player.hasReptileFace() && rand(3) == 0) gainSnakeTongue();
 			//-Remove Gills
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 			//<mod name="Reptile eyes" author="Stadler76">
 			//-Lizard eyes
-			if (player.eyeType != EYES_LIZARD && player.faceType == FACE_LIZARD && player.hasScales() && player.earType == EARS_LIZARD && changes < changeLimit && rand(4) == 0) {
+			if (!player.hasLizardEyes() && player.faceType == FACE_LIZARD && player.hasScales() && player.earType == EARS_LIZARD && changes < changeLimit && rand(4) == 0) {
 				if (player.hasReptileEyes())
 					outputText("\n\nYour eyes change slightly in their appearance.  ");
 				else
@@ -5332,6 +5328,7 @@
 
 		public function salamanderfirewater(player:Player):void
 		{
+			var tfSource:String = "salamanderfirewater";
 			player.slimeFeed();
 			//init variables
 			changes = 0;
@@ -5492,7 +5489,7 @@
 				player.breastRows[player.smallestTitRow()].breastRating++;
 				changes++;
 			}
-			
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Physical changes:
 			//Tail - 1st gain reptilian tail, 2nd unlocks enhanced with fire tail whip attack
 			if (player.tailType != TAIL_TYPE_LIZARD && player.tailType != TAIL_TYPE_SALAMANDER && changes < changeLimit && rand(3) == 0) {
@@ -5525,9 +5522,9 @@
 			}
 			//Arms
 			if (player.armType != ARM_TYPE_SALAMANDER && player.lowerBody == LOWER_BODY_TYPE_SALAMANDER && changes < changeLimit && rand(3) == 0) {
-				outputText("\n\nYou scratch at your biceps absentmindedly, but no matter how much you scratch, it isn't getting rid of the itch.  After longer moment of ignoring it you finaly glancing down in irritation, only to discover that your arms former appearance changed into this of salamander one with leathery, red scales and short claws replacing your fingernails.  <b>You now have a salamander arms.</b>", false);
+				outputText("\n\nYou scratch your biceps absentmindedly, but no matter how much you scratch, you can't get rid of the itch.  After a longer moment of ignoring it you finally glance down in irritation, only to discover that your arms former appearance has changed into those of a salamander with leathery, red scales and short, fiery-red claws replacing your fingernails.  <b>You now have salamander arms.</b>");
 				player.armType = ARM_TYPE_SALAMANDER;
-				player.clawType = CLAW_TYPE_SALAMANDER;
+				updateClaws(CLAW_TYPE_SALAMANDER);
 				changes++;
 			}
 			//Remove odd eyes
@@ -5563,6 +5560,7 @@
 				if (player.skinType == SKIN_TYPE_FUR) outputText("the skin under your " + player.furColor + " " + player.skinDesc + " has ");
 				else outputText("your " + player.skinDesc + (player.skinDesc.indexOf("scales") != -1 ? " have " : " has "));
 				player.skinTone = randomChoice(humanSkinColors);
+				updateClaws(player.clawType);
 				outputText("changed to become " + player.skinTone + " colored.</b>");
 			}
 			//Change skin to normal
@@ -5575,11 +5573,7 @@
 				changes++;
 			}
 			//Removing gills
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 			//FAILSAFE CHANGE
 			if (changes == 0) {
 				outputText("\n\nInhuman vitality spreads through your body, invigorating you!\n", false);
@@ -5615,6 +5609,7 @@
 
 		public function neonPinkEgg(pregnantChange:Boolean,player:Player):void
 		{
+			var tfSource:String = "neonPinkEgg";
 			changes = 0;
 			changeLimit = 1;
 			if (rand(2) == 0) changeLimit++;
@@ -5770,6 +5765,7 @@
 				outputText("\n\nYou feel strange.  Fertile... somehow.  You don't know how else to think of it, but you know your body is just aching to be pregnant and give birth.", false);
 			}
 			//-VAGs
+			if (rand(4) == 0) updateOvipositionPerk(tfSource);
 			if (player.hasVagina() && player.findPerk(PerkLib.BunnyEggs) < 0 && changes < changeLimit && rand(4) == 0 && player.bunnyScore() > 3) {
 				outputText("\n\nDeep inside yourself there is a change.  It makes you feel a little woozy, but passes quickly.  Beyond that, you aren't sure exactly what just happened, but you are sure it originated from your womb.\n\n", false);
 				outputText("(<b>Perk Gained: Bunny Eggs</b>)", false);
@@ -5886,11 +5882,8 @@
 				player.tailType = TAIL_TYPE_RABBIT;
 				changes++;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 			//Bunny Breeder Perk?
 			//FAILSAAAAFE
 			if (changes == 0) {
@@ -5950,10 +5943,13 @@
 				}
 			}
 			player.refillHunger(20);
+			flags[kFLAGS.TIMES_TRANSFORMED] += changes;
 		}
 
 		public function goldenSeed(type:Number,player:Player):void
 		{
+			var tfSource:String = "goldenSeed";
+			if (player.findPerk(PerkLib.HarpyWomb) >= 0) tfSource += "-HarpyWomb";
 			//'type' refers to the variety of seed.
 			//0 == standard.
 			//1 == enhanced - increase change limit and no pre-reqs for TF
@@ -6125,6 +6121,7 @@
 					}
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//****************
 			//General Appearance:
 			//****************
@@ -6146,6 +6143,7 @@
 				else if (temp == 2) player.skinTone = "dark";
 				else if (temp == 3) player.skinTone = "light";
 				outputText(player.skinTone + " colored.</b>", false);
+				updateClaws(player.clawType);
 			}
 			//-Grow hips out if narrow.
 			if (player.hipRating < 10 && changes < changeLimit && rand(3) == 0) {
@@ -6233,7 +6231,7 @@
 				outputText("\n\nYou smile impishly as you lick the last bits of the nut from your teeth, but when you go to wipe your mouth, instead of the usual texture of your " + player.skinDesc + " on your lips, you feel feathers! You look on in horror while more of the avian plumage sprouts from your " + player.skinDesc + ", covering your forearms until <b>your arms look vaguely like wings</b>. Your hands remain unchanged thankfully. It'd be impossible to be a champion without hands! The feathery limbs might help you maneuver if you were to fly, but there's no way they'd support you alone.", false);
 				changes++;
 				player.armType = ARM_TYPE_HARPY;
-				player.clawType = CLAW_TYPE_NORMAL;
+				updateClaws();
 			}
 			//-Feathery Hair
 			if (player.hairType != 1 && changes < changeLimit && (type == 1 || player.faceType == FACE_HUMAN) && rand(4) == 0) {
@@ -6253,11 +6251,8 @@
 				player.earType = EARS_HUMAN;
 				changes++;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 			//SPECIAL:
 			//Harpy Womb – All eggs are automatically upgraded to large, requires legs + tail to be harpy.
 			if (player.findPerk(PerkLib.HarpyWomb) < 0 && player.lowerBody == LOWER_BODY_TYPE_HARPY && player.tailType == TAIL_TYPE_HARPY && rand(4) == 0 && changes < changeLimit) {
@@ -6311,6 +6306,7 @@
 		 -Roo face*/
 		public function kangaFruit(type:Number,player:Player):void
 		{
+			var tfSource:String = "kangaFruit";
 			clearOutput();
 			outputText("You squeeze the pod around the middle, forcing the end open.  Scooping out a handful of the yeasty-smelling seeds, you shovel them in your mouth.  Blech!  Tastes like soggy burnt bread... and yet, you find yourself going for another handful...", false);
 			//Used to track changes and the max
@@ -6367,7 +6363,7 @@
 				changes++;
 			}
 			//-Restore arms to become human arms again
-			restoreArms();
+			if (rand(4) == 0) restoreArms(tfSource);
 			//-Remove feathery hair
 			removeFeatheryHair();
 			//Remove odd eyes
@@ -6431,6 +6427,7 @@
 					changes++;
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//****************
 			//Big Kanga Morphs
 			//type 1 ignores normal restrictions
@@ -6503,11 +6500,8 @@
 				changes++;
 				//trigger effect: Your body reacts to the influx of nutrition, accelerating your pregnancy. Your belly bulges outward slightly.
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
 			if (changes == 0) {
 				outputText("\n\nIt did not seem to have any effects, but you do feel better rested.", false);
 				player.changeFatigue(-40);
@@ -6531,6 +6525,8 @@
 
 		public function sweetGossamer(type:Number,player:Player):void
 		{
+			var tfSource:String = "sweetGossamer";
+			if (type == 1) tfSource += "-drider";
 			clearOutput();
 			changes = 0;
 			changeLimit = 1;
@@ -6646,6 +6642,7 @@
 				player.buttRating++;
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//***************
 			//Appearance Changes
 			//***************
@@ -6665,6 +6662,7 @@
 				player.skinAdj = "";
 				player.skinType = SKIN_TYPE_PLAIN;
 				player.skinDesc = "skin";
+				updateClaws(player.clawType);
 				changes++;
 			}
 			//(Gain human face)
@@ -6723,9 +6721,10 @@
 				if (player.armType == ARM_TYPE_HARPY) outputText("The feathers covering your arms fall away, leaving them to return to a far more human appearance.  ", false);
 				outputText("You watch, spellbound, while your forearms gradually become shiny.  The entire outer structure of your arms tingles while it divides into segments, <b>turning the " + player.skinFurScales() + " into a shiny black carapace</b>.  You touch the onyx exoskeleton and discover to your delight that you can still feel through it as naturally as your own skin.", false);
 				player.armType = ARM_TYPE_SPIDER;
+				updateClaws();
 				changes++;
 			}
-			if (rand(4) == 0) restoreFeet(null, RESTOREFEET_EXCLUDEDRIDER);
+			if (rand(4) == 0 && changes < changeLimit) restoreLegs(tfSource);
 			//Drider butt
 			if (type == 1 && player.findPerk(PerkLib.SpiderOvipositor) < 0 && player.isDrider() && player.tailType == TAIL_TYPE_SPIDER_ADBOMEN && changes < changeLimit && rand(3) == 0 && (player.hasVagina || rand(2) == 0)) {
 				outputText("\n\nAn odd swelling sensation floods your spider half.  Curling your abdomen underneath you for a better look, you gasp in recognition at your new 'equipment'!  Your semi-violent run-ins with the swamp's population have left you <i>intimately</i> familiar with the new appendage.  <b>It's a drider ovipositor!</b>  A few light prods confirm that it's just as sensitive as any of your other sexual organs.  You idly wonder what laying eggs with this thing will feel like...");
@@ -6768,11 +6767,9 @@
 				player.legCount = 8;
 				changes++;
 			}
-			if (rand(4) == 0 && player.gills && changes < changeLimit) {
-				outputText("\n\nYour chest itches, and as you reach up to scratch it, you realize your gills have withdrawn into your skin.", false);
-				player.gills = false;
-				changes++;
-			}
+			// Remove gills
+			if (rand(4) == 0 && player.hasGills() && changes < changeLimit) updateGills();
+
 			if (changes == 0) {
 				outputText("\n\nThe sweet silk energizes you, leaving you feeling refreshed.", false);
 				player.changeFatigue(-33);
@@ -6977,6 +6974,7 @@
 //Bottle of Ectoplasm Text
 		public function ectoplasm(player:Player):void
 		{
+			var tfSource:String = "ectoplasm";
 			player.slimeFeed();
 			clearOutput();
 			outputText("You grimace and uncork the bottle, doing your best to ignore the unearthly smell drifting up to your nostrils. Steeling yourself, you raise the container to your lips and chug the contents, shivering at the feel of the stuff sliding down your throat.  Its taste, at least, is unexpectedly pleasant.  Almost tastes like oranges.", false);
@@ -7018,6 +7016,7 @@
 					changes++;
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Appearnace Change
 			//Hair
 			if (rand(4) == 0 && changes < changeLimit && player.hairType != 2) {
@@ -7041,6 +7040,7 @@
 					player.skinDesc = "skin";
 					player.skinType = SKIN_TYPE_PLAIN;
 				}
+				updateClaws(player.clawType);
 				changes++;
 			}
 			//Legs
@@ -7079,6 +7079,7 @@
 //tooltip:
 		public function shriveledTentacle(player:Player):void
 		{
+			var tfSource:String = "shriveledTentacle";
 			clearOutput();
 			outputText("You chew on the rubbery tentacle; its texture and taste are somewhat comparable to squid, but the half-dormant nematocysts cause your mouth to tingle sensitively.", false);
 			changes = 0;
@@ -7110,6 +7111,7 @@
 			//-always increases lust by a function of sensitivity
 			//"The tingling of the tentacle
 
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//physical changes:
 			//- may randomly remove bee abdomen, if present; always checks and does so when any changes to hair might happen
 			if (rand(4) == 0 && changes < changeLimit && player.tailType == TAIL_TYPE_BEE_ABDOMEN) {
@@ -7125,7 +7127,7 @@
 				changes++;
 			}
 			//-hair morphs to anemone tentacles, retains color, hair shrinks back to med-short('shaggy') and stops growing, lengthening treatments don't work and goblins won't cut it, but more anemone items can lengthen it one level at a time
-			if (player.gills && player.hairType != 4 && changes < changeLimit && rand(5) == 0) {
+			if (player.gillType == GILLS_ANEMONE && player.hairType != 4 && changes < changeLimit && rand(5) == 0) {
 				outputText("\n\nYour balance slides way off, and you plop down on the ground as mass concentrates on your head.  Reaching up, you give a little shriek as you feel a disturbingly thick, squirming thing where your hair should be.  Pulling it down in front of your eyes, you notice it's still attached to your head; what's more, it's the same color as your hair used to be.  <b>You now have squirming tentacles in place of hair!</b>  As you gaze at it, a gentle heat starts to suffuse your hand.  The tentacles must be developing their characteristic stingers!  You quickly let go; you'll have to take care to keep them from rubbing on your skin at all hours.  On the other hand, they're quite short and you find you can now flex and extend them as you would any other muscle, so that shouldn't be too hard.  You settle on a daring, windswept look for now.", false);
 				player.hairType = 4;
 				player.hairLength = 5;
@@ -7140,15 +7142,13 @@
 				//appearance screen: replace 'hair' with 'tentacle-hair'
 			}
 			//-feathery gills sprout from chest and drape sensually over nipples (cumulative swimming power boost with fin, if swimming is implemented)
-			if (rand(5) == 0 && !player.gills && player.skinTone == "aphotic blue-black" && changes < changeLimit) {
-				outputText("\n\nYou feel a pressure in your lower esophageal region and pull your garments down to check the area.  <b>Before your eyes a pair of feathery gills start to push out of the center of your chest, just below your neckline, parting sideways and draping over your " + player.nippleDescript(0) + "s.</b>  They feel a bit uncomfortable in the open air at first, but soon a thin film of mucus covers them and you hardly notice anything at all.  You redress carefully.", false);
-				player.gills = true;
-				changes++;
-			}
+			if (rand(5) == 0 && player.gillType != GILLS_ANEMONE && player.skinTone == "aphotic blue-black" && changes < changeLimit)
+				updateGills(GILLS_ANEMONE);
 			//-[aphotic] skin tone (blue-black)
 			if (rand(5) == 0 && changes < changeLimit && player.skinTone != "aphotic blue-black") {
 				outputText("\n\nYou absently bite down on the last of the tentacle, then pull your hand away, wincing in pain.  How did you bite your finger so hard?  Looking down, the answer becomes obvious; <b>your hand, along with the rest of your skin, is now the same aphotic color as the dormant tentacle was!</b>", false);
 				player.skinTone = "aphotic blue-black";
+				updateClaws(player.clawType);
 				changes++;
 			}
 			//-eat more, grow more 'hair':
@@ -7245,6 +7245,7 @@
 
 		public function foxTF(enhanced:Boolean,player:Player):void
 		{
+			var tfSource:String = "foxTF";
 			clearOutput();
 			if (!enhanced) outputText("You examine the berry a bit, rolling the orangish-red fruit in your hand for a moment before you decide to take the plunge and chow down.  It's tart and sweet at the same time, and the flavors seem to burst across your tongue with potent strength.  Juice runs from the corners of your lips as you finish the tasty snack.");
 			else outputText("You pop the cap on the enhanced \"Vixen's Vigor\" and decide to take a swig of it.  Perhaps it will make you as cunning as the crude fox Lumi drew on the front?");
@@ -7482,6 +7483,7 @@
 						changes++;
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//[Grow Fur]
 			//FOURTH
 			if ((enhanced || player.lowerBody == LOWER_BODY_TYPE_FOX) && player.skinType != SKIN_TYPE_FUR && changes < changeLimit && rand(4) == 0) {
@@ -7725,6 +7727,8 @@
 //Consume:
 		public function foxJewel(mystic:Boolean,player:Player):void
 		{
+			var tfSource:String = "foxJewel";
+			if (mystic) tfSource += "-mystic";
 			clearOutput();
 			changes = 0;
 			changeLimit = 1;
@@ -7847,6 +7851,7 @@
 			//**********************
 			//BIG APPEARANCE CHANGES
 			//**********************
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//[Grow Fox Tail]
 			if (player.tailType != TAIL_TYPE_FOX && changes < changeLimit && ((mystic && rand(2) == 0) || (!mystic && rand(4) == 0))) {
 				//if PC has no tail
@@ -7925,6 +7930,7 @@
 				if (!InCollection(player.skinTone, tone)) player.skinTone = randomChoice(tone);
 				outputText(player.skinTone + " complexion.");
 				outputText("  <b>You now have " + player.skin() + "!</b>");
+				updateClaws(player.clawType);
 				changes++;
 			}
 			//Change skin tone if not changed you!
@@ -7932,6 +7938,7 @@
 				outputText("\n\nYou feel a crawling sensation on the surface of your skin, starting at the small of your back and spreading to your extremities, ultimately reaching your face.  Holding an arm up to your face, you discover that <b>you now have ");
 				player.skinTone = randomChoice(tone);
 				outputText(player.skin() + "!</b>");
+				updateClaws(player.clawType);
 				changes++;
 			}
 			//[Change Skin Color: add "Tattoos"]
@@ -7956,6 +7963,9 @@
 				player.vaginaType(0);
 				changes++;
 			}
+			// Kitsunes should have normal arms. exspecially skinny arms with claws are somewhat weird (Stadler76).
+			if (player.skinType == SKIN_TYPE_PLAIN && rand(4) == 0) restoreArms(tfSource);
+
 			if (changes == 0) {
 				outputText("\n\nOdd.  You don't feel any different.");
 			}
@@ -8200,6 +8210,7 @@
 //Flavour Description: A round, opaque glass vial filled with a clear, viscous fluid.  It has a symbol inscribed on it, a circle with a cross and arrow pointing out of it in opposite directions.  It looks and smells entirely innocuous.
 		public function trapOil(player:Player):void
 		{
+			var tfSource:String = "trapOil";
 			clearOutput();
 			changes = 0;
 			changeLimit = 1;
@@ -8420,6 +8431,7 @@
 					changes++;
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Nipples Turn Black:
 			if (player.findStatusEffect(StatusEffects.BlackNipples) < 0 && rand(6) == 0 && changes < changeLimit) {
 				outputText("\n\nA tickling sensation plucks at your nipples and you cringe, trying not to giggle.  Looking down you are in time to see the last spot of flesh tone disappear from your [nipples].  They have turned an onyx black!");
@@ -8511,6 +8523,7 @@
 
 		public function ringtailFig(player:Player):void
 		{
+			var tfSource:String = "ringtailFig";
 			clearOutput();
 			//eat it:
 			outputText("You split the fruit and scoop out the pulp, eating it greedily.  It's sweet and slightly gritty with seeds, and you quickly finish both halves.");
@@ -8567,6 +8580,7 @@
 				outputText(player.modThickness(80, 2), false);
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//bodypart changes:
 			if (player.tailType != TAIL_TYPE_RACCOON && rand(4) == 0 && changes < changeLimit) {
 				//grow da tail
@@ -8689,6 +8703,7 @@
 //Mouse Cocoa/MousCoco (you can change the name if you're saddlesore I guess but I'll make fun of you for having no plausible source of chocolate for your bakery if you do)
 		public function mouseCocoa(player:Player):void
 		{
+			var tfSource:String = "mouseCocoa";
 			clearOutput();
 			changes = 0;
 			changeLimit = 1;
@@ -8783,6 +8798,7 @@
           changes++;
         }
       }
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//bodypart changes:
 			//gain ears
 			if (player.earType != EARS_MOUSE && changes < changeLimit && rand(4) == 0) {
@@ -9048,7 +9064,9 @@
 		}
 		
 		//Ferret Fruit
-		public function ferretTF(player:Player):void {
+		public function ferretTF(player:Player):void
+		{
+			var tfSource:String = "ferretTF";
 			//CoC Ferret TF (Ferret Fruit)
 			//Finding Ferret Fruit
 			//- Ferret Fruit may be randomly found while exploring the plains.
@@ -9183,12 +9201,8 @@
 				changes++;
 			}
 			//If the PC has gills:
-			if (player.gills && rand(4) == 0 && changes < changeLimit)
-			{
-				outputText("\n\nYou grit your teeth as a stinging sensation arises in your gills.  Within moments, the sensation passes, and <b>your gills are gone!</b>");
-				player.gills = false;
-				changes++;
-			}
+			if (player.hasGills() && rand(4) == 0 && changes < changeLimit) updateGills();
+			//	outputText("\n\nYou grit your teeth as a stinging sensation arises in your gills.  Within moments, the sensation passes, and <b>your gills are gone!</b>");
 			//If the PC has tentacle hair:
 			if (player.hairType == HAIR_ANEMONE && rand(4) == 0 && changes < changeLimit)
 			{
@@ -9220,6 +9234,7 @@
 						changes++;
 				}
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//Turn ferret mask to full furface.
 			if (player.faceType == FACE_FERRET_MASK && player.skinType == SKIN_TYPE_FUR && player.earType == EARS_FERRET && player.tailType == TAIL_TYPE_FERRET && player.lowerBody == LOWER_BODY_TYPE_FERRET && rand(4) == 0 && changes < changeLimit)
 			{
@@ -9335,7 +9350,10 @@
 			flags[kFLAGS.TIMES_TRANSFORMED] += changes;
 		}
 		
-		public function pigTruffle(boar:Boolean, player:Player):void {
+		public function pigTruffle(boar:Boolean, player:Player):void
+		{
+			var tfSource:String = "pigTruffle";
+			if (boar) tfSource += "-boar";
 			changes = 0;
 			changeLimit = 1;
 			var temp:int = 0;
@@ -9399,6 +9417,7 @@
 				player.ballSize++;
 				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource);
 			//-----------------------
 			// TRANSFORMATIONS
 			//-----------------------
@@ -9474,6 +9493,7 @@
 				}
 				outputText("\n\nYour skin tingles ever so slightly as you skin’s color changes before your eyes. As the tingling diminishes, you find that your skin has turned " + skinToBeChosen + ".");
 				player.skinTone = skinToBeChosen;
+				updateClaws(player.clawType);
 				changes++;
 			}
 			if (changes == 0) {
@@ -9482,7 +9502,11 @@
 			flags[kFLAGS.TIMES_TRANSFORMED] += changes;
 		}
 		
-		public function winterPudding(player:Player, returnToBakery:Boolean = false):void {
+		public function winterPudding(player:Player, returnToBakery:Boolean = false):void
+		{
+			var tfSource:String = "winterPudding";
+			changes = 0;
+			changeLimit = 2;
 			outputText("You stuff the stodgy pudding down your mouth, the taste of brandy cream sauce and bitter black treacle sugar combining in your mouth.  You can tell by its thick spongy texture that it's far from good for you, so its exclusivity is more than likely for the best.");
 			player.refillHunger(30);
 			if (player.thickness < 100 || player.tone > 0) {
@@ -9500,7 +9524,7 @@
 				//[Player horn type changed to Antlers.]
 				player.hornType = HORNS_ANTLERS;
 				player.horns = 4 + rand(12);
-				flags[kFLAGS.TIMES_TRANSFORMED]++;
+				changes++;
 			}
 			//[Show this description instead if the player already had horns when the transformation occurred.] 
 			else if (player.horns > 0 && player.hornType != HORNS_ANTLERS && rand(2) == 0) {
@@ -9508,8 +9532,10 @@
 				//[Player horn type changed to Antlers.]
 				player.hornType = HORNS_ANTLERS;
 				player.horns = 4 + rand(12);
-				flags[kFLAGS.TIMES_TRANSFORMED]++;
+				changes++;
 			}
+			if (rand(5) == 0) updateOvipositionPerk(tfSource); // I doubt, that winterPudding will ever be affected, but well ... just in case
+			flags[kFLAGS.TIMES_TRANSFORMED] += changes;
 			if (returnToBakery) {
 				doNext(kGAMECLASS.telAdre.bakeryScene.bakeryuuuuuu);
 				return;

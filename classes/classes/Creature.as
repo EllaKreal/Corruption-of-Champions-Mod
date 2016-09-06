@@ -157,6 +157,7 @@ package classes
 			if (skinType == SKIN_TYPE_FUR) return _furColor;
 			else return hairColor;
 		}
+		public function get newFurColor():String { return _furColor; } // alternative getter for the furColor. Ignores the skinType (Stadler76)
 		public function set furColor(value:String):void { _furColor = value; }
 		/*Beardstyle
 		0- normal
@@ -356,8 +357,9 @@ package classes
 		//ArmType
 		public var armType:Number = ARM_TYPE_HUMAN;
 
-		//Gills
-		public var gills:Boolean = false;
+		//GillType
+		public var gillType:int = GILLS_NONE;
+		public function hasGills():Boolean { return gillType != GILLS_NONE; }
 
 		//Sexual Stuff		
 		//MALE STUFF
@@ -612,6 +614,11 @@ package classes
 			{
 				return false;
 			}
+			if (perkv4(ptype) > 0)
+			{
+				// trace('ERROR! Attempted to remove permanent "' + ptype.name + '" perk.');
+				return false;
+			}
 			while (counter > 0)
 			{
 				counter--;
@@ -741,7 +748,7 @@ package classes
 		var counter:Number = findPerk(ptype);
 		if (counter < 0)
 		{
-			trace("ERROR? Looking for perk '" + ptype + "', but player does not have it.");
+			// trace("ERROR? Looking for perk '" + ptype + "', but player does not have it.");
 			return 0;
 		}
 		return perk(counter).value4;
@@ -1827,11 +1834,7 @@ package classes
 		// As such, delineating between the two is kind of silly.
 		public function dogCocks():int { //How many dogCocks
 			if (cocks.length == 0) return 0;
-			var counter:int = 0;
-			for (var x:int = 0; x < cocks.length; x++) {
-				if (cocks[x].cockType == CockTypesEnum.DOG || cocks[x].cockType == CockTypesEnum.FOX) counter++;
-			}
-			return counter;
+			return countCocksOfType(CockTypesEnum.DOG) + countCocksOfType(CockTypesEnum.FOX);
 		}
 		
 		public function findFirstCockType(ctype:CockTypesEnum):Number

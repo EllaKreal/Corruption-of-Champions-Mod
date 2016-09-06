@@ -7,10 +7,11 @@ package classes {
 	public class PlayerEvents extends BaseContent implements TimeAwareInterface {
 		//Handles all timeChange events for the player. Needed because player is not unique.
 		
-		public function PlayerEvents():void {
+		public function PlayerEvents():void
+		{
 			CoC.timeAwareClassAdd(this);
 		}
-		
+
 		private var checkedTurkey:int; //Make sure we test each of these events just once in timeChangeLarge
 		private var checkedDream:int;
 		private var displayedBeeCock:Boolean;
@@ -50,6 +51,11 @@ package classes {
 			else { //Well adjusted perk
 				dynStats("lus", player.lib * 0.02, "resisted", false); //Raise lust
 				if (player.findPerk(PerkLib.Lusty) >= 0) dynStats("lus", player.lib * 0.01, "resisted", false); //Double lust rise if lusty.
+			}
+			//Feathery hairpin Effects
+			if (player.featheryHairPinEquipped() && mutations.lizardHairChange("PlayerEvents-benoitHairPin") != 0)
+			{
+				needNext = true;
 			}
 			//Jewelry effect
 			if (player.jewelryEffectId == JewelryLib.CORRUPTION)
@@ -214,10 +220,12 @@ package classes {
 			if (flags[kFLAGS.BASILISK_RESISTANCE_TRACKER] >= 100 && player.findPerk(PerkLib.BasiliskResistance) < 0) {
 				outputText("\nYou notice that you feel a bit stiff and your skin is a bit harder.  Something clicks in your mind as you finally unlock the potential to protect yourself from the goddamn basilisks! \n\n(<b>Gained Perk: Basilisk Resistance - Your maximum speed is permanently decreased but you are now immune to the basilisk's gaze!</b>)\n");
 				player.createPerk(PerkLib.BasiliskResistance, 0, 0, 0, 0);
+				needNext = true;
 			}
 			if (flags[kFLAGS.TIMES_TRANSFORMED] >= 100 && player.findPerk(PerkLib.TransformationResistance) < 0) {
 				outputText("\nYou feel a strange tingling sensation. It seems as if you've finally adapted to the transformative properties of the food in Mareth and your body has finally built up enough resistance! You suspect that you can still transform but at somewhat diminished rate. \n\n(<b>Gained Perk: Transformation Resistance - Transformative items now have less chance to transform you. In addition, any Bad Ends related to overdose of certain transformative items are now disabled.</b>)\n");
 				player.createPerk(PerkLib.TransformationResistance, 0, 0, 0, 0);
+				needNext = true;
 			}
 			if ((player.findPerk(PerkLib.EnlightenedNinetails) >= 0 && player.perkv4(PerkLib.EnlightenedNinetails) == 0) || (player.findPerk(PerkLib.CorruptedNinetails) >= 0 && player.perkv4(PerkLib.CorruptedNinetails) == 0)) { //Check ninetails perks!
 				if (player.tailType != TAIL_TYPE_FOX || player.tailVenom < 9) {
@@ -396,18 +404,13 @@ package classes {
 					}
 				}
 			}
+			if (player.findPerk(PerkLib.BunnyEggs) >= 0 && player.bunnyScore() < 3) { //--Lose BunnyEggs oviposition perk if bunny score gets below 3.
+				outputText("\nAnother change in your uterus ripples through your reproductive systems.  Somehow you know you've lost your ability to spontaneously lay eggs.\n(<b>Perk Lost: Bunny Eggs</b>)\n");
+				player.removePerk(PerkLib.BunnyEggs);
+				needNext = true;
+			}
 			if (player.findPerk(PerkLib.Oviposition) >= 0 || player.findPerk(PerkLib.BunnyEggs) >= 0) { //Oviposition perk for lizard and bunny folks
-				if ((player.nagaScore() + player.lizardScore() < 3) && player.findPerk(PerkLib.Oviposition) >= 0 && player.findPerk(PerkLib.BasiliskWomb) < 0) { //--Lose Oviposition perk if lizard score gets below 3.
-					outputText("\nAnother change in your uterus ripples through your reproductive systems.  Somehow you know you've lost a little bit of reptilian reproductive ability.\n(<b>Perk Lost: Oviposition</b>)\n");
-					player.removePerk(PerkLib.Oviposition);
-					needNext = true;
-				}
-				else if (player.bunnyScore() < 3 && player.findPerk(PerkLib.BunnyEggs) >= 0) { //--Lose Oviposition perk if bunny score gets below 3.
-					outputText("\nAnother change in your uterus ripples through your reproductive systems.  Somehow you know you've lost your ability to spontaneously lay eggs.\n(<b>Perk Lost: Bunny Eggs</b>)\n");
-					player.removePerk(PerkLib.BunnyEggs);
-					needNext = true;
-				}
-				else if (player.pregnancyIncubation < 1 && player.hasVagina() && getGame().model.time.hours == 1) { //Otherwise pregger check, once every morning
+				if (player.pregnancyIncubation < 1 && player.hasVagina() && getGame().model.time.hours == 1) { //Otherwise pregger check, once every morning
 					if ((player.totalFertility() > 50 && getGame().model.time.days % 15 == 0) || getGame().model.time.days % 30 == 0) { //every 15 days if high fertility get egg preg
 						outputText("\n<b>Somehow you know that eggs have begun to form inside you.  You wonder how long it will be before they start to show?</b>\n");
 						player.knockUp(PregnancyStore.PREGNANCY_OVIELIXIR_EGGS, PregnancyStore.INCUBATION_OVIELIXIR_EGGS, 1, 1);
@@ -833,11 +836,12 @@ package classes {
 					flags[kFLAGS.KAIJU_BAD_END_COUNTER]--;
 					if (flags[kFLAGS.KAIJU_BAD_END_COUNTER] < 0) flags[kFLAGS.KAIJU_BAD_END_COUNTER] = 0;
 				}
-				if (flags[kFLAGS.GILDED_JERKED] > 0) flags[kFLAGS.GILDED_JERKED] = 0;
-				if (flags[kFLAGS.FED_SCYLLA_TODAY] == 1) flags[kFLAGS.FED_SCYLLA_TODAY] = 0;
-				if (flags[kFLAGS.NOT_HELPED_ARIAN_TODAY] != 0) flags[kFLAGS.NOT_HELPED_ARIAN_TODAY] = 0;
+				flags[kFLAGS.GILDED_JERKED] = 0;
+				flags[kFLAGS.FED_SCYLLA_TODAY] = 0;
+				flags[kFLAGS.NOT_HELPED_ARIAN_TODAY] = 0;
 				if (flags[kFLAGS.RUBI_PROSTITUTION] > 0) flags[kFLAGS.RUBI_PROFIT] += 2 + rand(4);
 				flags[kFLAGS.BENOIT_TALKED_TODAY] = 0;
+				flags[kFLAGS.BENOIT_HAIRPIN_TALKED_TODAY] = 0;
 				getGame().bazaar.benoit.updateBenoitInventory();
 				flags[kFLAGS.ROGAR_FUCKED_TODAY] = 0;
 				if (flags[kFLAGS.UNKNOWN_FLAG_NUMBER_00285] > 0) flags[kFLAGS.UNKNOWN_FLAG_NUMBER_00285]--; //Reduce lust-stick resistance building

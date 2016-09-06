@@ -34,10 +34,8 @@ package classes.Scenes.Monsters
 			}
 			else {
 				outputText("You smile in satisfaction as " + monster.a + monster.short + " collapses and begins masturbating feverishly.", true);
-				if (monster.HP <= 0) {
-					addButton(0, "Kill Him", killImp);
+				if (addKillPetrifyButtons())
 					addButton(4, "Leave", combat.cleanupAfterCombat);
-				}
 				else combat.cleanupAfterCombat();
 				return;
 			}
@@ -65,7 +63,7 @@ package classes.Scenes.Monsters
 			if (canFeed) addButton(3, "Breastfeed", areImpsLactoseIntolerant);
 			if (canBikiniTits) addButton(4, "B.Titfuck", (player.armor as LustyMaidensArmor).lustyMaidenPaizuri);
 			if (maleRape == rapeImpWithDick && player.hasItem(useables.CONDOM)) addButton(5, "Use Condom", rapeImpWithDick, true);
-			addButton(6, "Kill Him", killImp);
+			addKillPetrifyButtons(6);
 			if (player.canOvipositBee()) addButton(8, "Oviposit", putBeeEggsInAnImpYouMonster);
 			addButton(14, "Leave", combat.cleanupAfterCombat);
 		}
@@ -1544,8 +1542,7 @@ package classes.Scenes.Monsters
 			clearOutput();
 			if (monster.HP < 1) {
 				outputText("The greater imp falls to the ground panting and growling in anger.  He quickly submits however, the thoroughness of his defeat obvious.  You walk towards the imp who gives one last defiant snarl before slipping into unconsciousness.");
-				if (monster.short != "imp overlord") addButton(0, "Kill Him", killImp);
-				else {
+				if (!addKillPetrifyButtons()) {
 					combat.cleanupAfterCombat();
 					return;
 				}
@@ -1556,18 +1553,21 @@ package classes.Scenes.Monsters
 				//Leave // Rape]
 				menu();
 				if (player.lust >= 33 && flags[kFLAGS.SFW_MODE] <= 0) addButton(0, "Sex", sexAnImpLord);
+				addKillPetrifyButtons(1);
 				addButton(4, "Leave", combat.cleanupAfterCombat);
 			}
 		}
-		public function loseToAnImpLord():void {
+
+		public function loseToAnImpLord(overlord:Boolean = false):void {
 			clearOutput();
-			if (player.hasVagina() && (player.gender == 2 || rand(2) == 0) && flags[kFLAGS.SFW_MODE] <= 0) getRapedAsAGirl();
-			else if (player.hasCock() && flags[kFLAGS.SFW_MODE] <= 0) loseToImpLord();
-			else {
+			if (flags[kFLAGS.SFW_MODE] > 0) {
 				outputText("Taking a look at your defeated form, the " + monster.short + " snarls, \"<i>Useless,</i>\" before kicking you in the head, knocking you out cold.");
 				player.takeDamage(9999);
 				combat.cleanupAfterCombat();
-			}
+			} else if (player.hasVagina() && (!player.hasCock() || rand(2)) ) {
+				impLordRapeFemale(overlord);
+			} else 
+				impLordRapeMale(overlord);
 		}
 		
 		//Rape
@@ -1739,6 +1739,7 @@ package classes.Scenes.Monsters
 			outputText("\n\nAfter a few moments of recovery, you slowly lift yourself off the imp.  Cum rushes out of your " + player.vaginaDescript() + " and you clamp your muscles down as best as you can to keep the warm substance inside of you.  You give your swollen, cum-filled belly a motherly rub, before gathering your [armor].");
 			player.orgasm();
 			dynStats("cor", 1);
+			player.knockUp(PregnancyStore.PREGNANCY_IMP, PregnancyStore.INCUBATION_IMP - 24);
 			player.slimeFeed();
 			combat.cleanupAfterCombat();
 		}
@@ -1858,89 +1859,85 @@ package classes.Scenes.Monsters
 			combat.cleanupAfterCombat();
 		}
 		
-		//MALE LOSE
-		private function loseToImpLord():void {
+		// MALE LOSE
+		// NOTE: Assumes player has a cock
+		private function impLordRapeMale(overlord:Boolean):void {
 			clearOutput();
-			if (doSFWloss()) return;
-			outputText(images.showImage("implord-loss-male"), false);
+			if      (doSFWloss())  return;
+			else if (overlord)     outputText(images.showImage("impoverlord-loss-male"), false);
+			else                   outputText(images.showImage("implord-loss-male"), false);
+
 			outputText("Unable to control your lust you fall to the ground, remove your " + player.armorName + " and begin masturbating furiously.  The powerful imp saunters over to you smirking evilly as he towers over your fallen form. You look up at him nervously.  He grabs your chin with one of his clawed hands, while the other digs through his satchel.  He pulls out a vial filled with glowing green liquid, and pops the cork stopper off with his thumb. Before you can react, the demon forces open your mouth and pours the liquid in.  Instinct reacts faster than logic and you swallow the substance as it's poured down your throat.");
 			outputText("\n\nYou cough and splutter, grabbing your gut, as a hot pain fills your stomach.  The imp laughs as you roll around in agony for several long moments, before the burning turns to an arousing warmth that spreads to your [hips] and [asshole].  Groaning, you feel your cheeks flush with arousal, and your eyes glaze over once more with insatiable lust.");
-			if (player.cockTotal() == 1) {
-				outputText("\n\nYou feel your " + player.cockDescript(0) + " grow harder than usual and throb.  You go to stroke yourself but it's far too sensitive. Any stroking you can do is far too little stimulation and anything else is too painful to withstand.  You whimper and curse in desperation.  Your lust clouded mind can only think of one solution; you bend over and reveal your [asshole] to the grinning imp.  The humiliation keeps you from looking back to see the imp's reaction, but you can tell by his chuckle that this is exactly what he wanted.");
-			}
-			else if (player.cockTotal() > 1) {
-				outputText("\n\nYou feel your " + player.multiCockDescriptLight() + " grow harder than usual and throb.  You go to stroke yourself but they are far too sensitive. Any stroking you can do is far too little stimulation and anything else is to painful too withstand.  You whimper and curse in desperation.  Your lust clouded mind can only think of one solution; you bend over and reveal your " + player.assholeDescript() + " to the grinning imp.  The humiliation keeps you from looking back to see the imp's reaction, but you can tell by his chuckle that this is exactly what he wanted.");
-			}
-			outputText("\n\nThe imp gets behind you; his corrupt presence makes the air feel heavy and hard to breathe.  You notice his satchel and loincloth get carelessly tossed to the ground.  Chancing a glance back, you look in aroused horror at the " + monster.cockDescriptShort(0) + " between the imp's legs as well as his matching cum-filled balls.  Two clawed, red hands spread your [butt] revealing your [asshole].  Mercifully, the demon decides you'll need some form of lubrication and relaxation before he continues.  He leans forward and presses his tongue between your [butt] and begins lapping at your [asshole] viciously.  You can't help but mewl from the merciless attack on your tender rectum.");
+		
+			// Nr cocks?
+			if (player.cockTotal() == 1)  outputText("\n\nYou feel your " + player.cockDescript(0) + " grow harder than usual and throb.  You go to stroke yourself but it's far too sensitive. Any stroking you can do is far too little stimulation and anything else is too painful to withstand.  You whimper and curse in desperation.  Your lust clouded mind can only think of one solution; you bend over and reveal your [asshole] to the grinning imp.  The humiliation keeps you from looking back to see the imp's reaction, but you can tell by his chuckle that this is exactly what he wanted.");
+			else                          outputText("\n\nYou feel your " + player.multiCockDescriptLight() + " grow harder than usual and throb.  You go to stroke yourself but they are far too sensitive. Any stroking you can do is far too little stimulation and anything else is to painful too withstand.  You whimper and curse in desperation.  Your lust clouded mind can only think of one solution; you bend over and reveal your " + player.assholeDescript() + " to the grinning imp.  The humiliation keeps you from looking back to see the imp's reaction, but you can tell by his chuckle that this is exactly what he wanted.");
+			outputText("\n\nThe imp gets behind you; his corrupt presence makes the air feel heavy and hard to breathe.  You notice his satchel and loincloth get carelessly tossed to the ground.  Chancing a glance back, you look in aroused horror at the " + monster.cockDescript(0) + " between the imp's legs as well as his matching cum-filled balls.  Two clawed, red hands spread your [butt] revealing your [asshole].  Mercifully, the demon decides you'll need some form of lubrication and relaxation before he continues.  He leans forward and presses his tongue between your [butt] and begins lapping at your [asshole] viciously.  You can't help but mewl from the merciless attack on your tender rectum.");
 			
-			//if (player has a vagina)
-			if (player.hasVagina()) {
-				outputText("\n\nThe imp takes a moment to pleasure your [vagina], forcing his tongue and two clawed fingers inside.  The claws scratch and tease painfully at your inner walls.  You mewl and cry out from the stimulation, as the imp's tongue moves from your [vagina] to your [clit].  You cry out in desperation as the powerful demon attacks your [clit] with his tongue.");
-			}
-			else if (player.balls > 0 && player.hasCock()) {
-				outputText("\n\nThe imp moves away from your [asshole], and begins to focus on your [balls].  He pulls one into his hand, and squeezes it cruelly while he licks and bites at your [sack].  He gives a painfully tight squeeze to the orb in his hand, which makes you cry out in painful ecstasy.  A single bead of precum gets forced out of your " + player.cockDescript(0) + ".");
-			}
+			// Vagina?
+			if      (player.hasVagina())  outputText("\n\nThe imp takes a moment to pleasure your [vagina], forcing his tongue and two clawed fingers inside.  The claws scratch and tease painfully at your inner walls.  You mewl and cry out from the stimulation, as the imp's tongue moves from your [vagina] to your [clit].  You cry out in desperation as the powerful demon attacks your [clit] with his tongue.");
+			else if (player.balls > 0)    outputText("\n\nThe imp moves away from your [asshole], and begins to focus on your [balls].  He pulls one into his hand, and squeezes it cruelly while he licks and bites at your [sack].  He gives a painfully tight squeeze to the orb in his hand, which makes you cry out in painful ecstasy.  A single bead of precum gets forced out of your " + player.cockDescript(0) + ".");
 			
-			outputText("\n\nThe imp finally backs off from his brutal attack on your sensitive backside.  Whatever was in that vial has made your body incredibly sensitive... each caress feels like an orgasm, and each scratch feels like a stab wound.  You hope that's the only effect of the green liquid, but don't get much chance to ponder it as you feel the muscular demon press the head of his " + monster.cockDescriptShort(0) + " against your [asshole].");
+			if (overlord)
+				outputText("  You watch as the imp stands up and removes his loincloth to reveal his demonic member.  He doesn't even have to remove his armor!");			
 			
+			outputText("\n\nThe imp finally backs off from his brutal attack on your sensitive backside.  Whatever was in that vial has made your body incredibly sensitive... each caress feels like an orgasm, and each scratch feels like a stab wound.  You hope that's the only effect of the green liquid, but don't get much chance to ponder it as you feel the muscular demon press the head of his " + monster.cockDescript(0) + " against your [asshole].");
 			outputText("\n\nYou whimper in fear as you look back towards the devilish imp behind you.  He simply grins at you in response as he thrusts forward.  You yell out in pain as the " + monster.cockDescriptShort(0) + " forces its way into your [asshole].  You try to struggle away, but the imp gives you a very rough slap on the ass.  He then roughly grabs your [hips], making sure to dig his claws in just enough to deter you from struggling.");
+
 			player.buttChange(monster.cockArea(0),true,true,false);
 			
 			outputText("\n\nThough the entry was rough, the imp's thrusts are incredibly gentle.  He carefully thrusts in and out of your [asshole], and even begins licking and delicately kissing your back.  The horrible stretching of your [asshole] is still incredibly painful, but made tolerable by the contrasting caresses.  You quickly lose track of time as the pain and pleasure spark across your overly sensitive body.  The imp continues to be oddly affectionate now that you've fully submitted to his will.  He even releases his painful, clawed grip on your [hips].");
-			
-			outputText("\n\nAfter longer than you'd have hoped for, the painful stretching sensation begins to disappear; and the pleasurable sensation of the imp's " + monster.cockDescriptShort(0) + " thrusting in and out of your [asshole] becomes entirely pleasurable.  The way his " + monster.cockDescriptShort(0) + " fills every inch of your ass, and rubs all your most sensitive spots.  The weird sensation his warm, demonic pre-cum coats your insides.  You find your lust-blinded mind has become lost in the sensations - so lost that you don't even notice the imp increasing his pace.");
-			
+			outputText("\n\nAfter longer then you'd have hoped for, the painful stretching sensation begins to disappear; and the pleasurable sensation of the imp's " + monster.cockDescript(0) + " thrusting in and out of your [asshole] becomes entirely pleasurable.  The way his " + monster.cockDescript(0) + " fills every inch of your ass, and rubs all your most sensitive spots.  The weird sensation his warm, demonic pre-cum coats your insides.  You find your lust-blinded mind has become lost in the sensations - so lost that you don't even notice the imp increasing his pace.");
 			outputText("\n\nWithin moments the beast is wildly thrusting in and out of your [asshole].  Pre-cum is pumping out of his " + monster.cockDescriptShort(0) + " like a faucet. The hot demon pre begins to spill back out of your abused [asshole], coating your [hips], and dripping to the ground beneath.  The imp gives you a few more rough thrusts before cumming hard into your [asshole].  The little demon's " + monster.cockDescriptShort(0) + " spasms as he continues to roughly thrust and pump you full of his burning hot demon seed.");
 			
-			if (player.hasCock()) {
-				outputText("\n\nThe hot seed filling your belly wakes you from your lust induced daydream and you howl in discomfort.  Your belly begins to swell with the thick seed, coating every inch of your insides with the burning, arousing sensation.  This pushes you over the edge and you orgasm.  ");
-				if (player.balls > 0) outputText("Your [balls] clench up against your body, desperate to finally expel their contents.  ");
-				outputText("Your seed spills across the ground, mixing with the copious amount of demon pre that had sloshed to the ground earlier.  You howl loudly in pleasure, as you're finally given release.");
-			}
+			outputText("\n\nThe hot seed filling your belly wakes you from your lust induced daydream and you howl in discomfort.  Your belly begins to swell with the thick seed, coating every inch of your insides with the burning, arousing sensation.  This pushes you over the edge and you orgasm.  ");
+			if (player.balls > 0)
+				outputText("Your [balls] clench up against your body, desperate to finally expel their contents.  ");
+			outputText("Your seed spills across the ground, mixing with the copious amount of demon pre that had sloshed to the ground earlier.  You howl loudly in pleasure, as you're finally given release.");
 			
-			outputText("\n\nThe imp pulls out, but is quick to stuff a soft unknown object into your [asshole] to plug all of his delicious, corrupt seed inside of you.  You stay in position, though you're wobbling slightly from the intense experience.  The short, muscular demon looks down at you, and you look up at him concerned.  He chuckles, \"<i>Don't worry my bitch, that thing will dissolve on its own in a day or so,</i>\" the demon assures you.  He grips his " + monster.cockDescriptShort(0) + ", which is soaked with his own juices, and holds it out towards you.");
-			
+			outputText("\n\nThe imp pulls out, but is quick to stuff a soft unknown object into your [asshole] to plug all of his delicious, corrupt seed inside of you.  You stay in position, though you're wobbling slightly from the intense experience.  The short, muscular demon looks down at you, and you look up at him concerned.  He chuckles, \"<i>Don't worry my bitch, that thing will dissolve on its own in a day or so,</i>\" the demon assures you.  He grips his " + monster.cockDescript(0) + ", which is soaked with his own juices, and holds it out towards you.");
 			outputText("\n\nYou take the hint and nervously lick the cock clean.  You can taste the corruption, and it sends sparks through your mind.  You almost wish it didn't have to end, but soon the imp is satisfied with your cleaning job, gathers his things and turns to leave you to recover from your ordeal.  Within minutes of him leaving you pass out, collapsing to the ground.  You lay there, in a puddle of sexual fluids for a long time before you wake up.  After gathering your equipment, you begin to make your way back to camp.  Hopefully that green stuff's effects will have worn off once you get back.");
+
 			player.orgasm();
-			dynStats("sen", 2, "cor", 1);
+			dynStats("sen", overlord ? 1 : 2);
+			dynStats("cor", overlord ? 2 : 1);
 			player.slimeFeed();
 			combat.cleanupAfterCombat();
 		}
 		
 		//FEMALE LOSE
-		private function getRapedAsAGirl():void {
+		private function impLordRapeFemale(overlord:Boolean):void {
 			clearOutput();
-			if (doSFWloss()) return;
-			outputText(images.showImage("implord-loss-female"), false);
+			if      (doSFWloss())  return;
+			else if (overlord)     outputText(images.showImage("impoverlord-loss-female"), false);
+			else                   outputText(images.showImage("implord-loss-female"), false);
+
 			outputText("You collapse from exhaustion, your [vagina] beginning to soak your [armor].  You groan loudly, desperately trying to continue the fight, or flee, but the exhaustion is too much.  You close your eyes for a moment, but hearing a loud thud near your face causes you to painfully open your eyes.  You see a large bestial hoof near your face, while the other hoof is used to roll you onto your back.");
-			
-			outputText("\n\nYou try to move, but before you can even begin to squirm a hoof presses hard between your " + player.breastDescript(0) + ".  You gasp as the air is temporarily knocked out of your lungs.  The demon chuckles at your last feeble attempt to free yourself.  He holds his " + monster.cockDescriptShort(0) + " stroking it lewdly, a cruel smirk stretching across his face.  You watch as several beads of pre begin to drip from his tip onto your stomach.");
-			
+			outputText("\n\nYou try to move, but before you can even begin to squirm a hoof presses hard between your " + player.breastDescript(0) + ".  You gasp as the air is temporarily knocked out of your lungs.  The demon chuckles at your last feeble attempt to free yourself.  He holds his " + monster.cockDescript(0) + " stroking it lewdly, a cruel smirk stretching across his face.  You watch as several beads of pre begin to drip from his tip onto your stomach.");
 			outputText("\n\nThe imp steps between your legs, gently kicking them apart, until the wet spot on your [armor] is painfully obvious.  He chuckles, and leans down, ripping your [armor] off.  He casually tosses it to the side, and leans towards your [vagina].");
 			
-			//if (Player has balls)
-			if (player.balls > 0) {
-				outputText("\n\nThe imp pulls your [balls] up, revealing your [vagina].  Unceremoniously, he presses his lips towards your crotch forcing his tongue into your [vagina], making you gasp in pleasure.  He gives your [balls] a rough squeeze, making your [vagina] even wetter than it was.  The imp moans in delight, licking up all your girl juices.");
-			}
-			else {
-				outputText("\n\nThe imp roughly forces his tongue into your [vagina] making you gasp in pleasure.  Your [vagina] clenches around the demonic tongue, squirting some of your girl juices around the wet flesh as it delves deeper into you.  You writhe and squirm trying to fight against the forced pleasure.");
-			}
-			
+			// Balls?
+			if (player.balls > 0)  outputText("\n\nThe imp pulls your [balls] up, revealing your [vagina].  Unceremoniously, he presses his lips towards your crotch forcing his tongue into your [vagina], making you gasp in pleasure.  He gives your [balls] a rough squeeze, making your [vagina] even wetter than it was.  The imp moans in delight, licking up all your girl juices.");
+			else                   outputText("\n\nThe imp roughly forces his tongue into your [vagina] making you gasp in pleasure.  Your [vagina] clenches around the demonic tongue, squirting some of your girl juices around the wet flesh as it delves deeper into you.  You writhe and squirm trying to fight against the forced pleasure.");
 			outputText("\n\nYou mewl pitifully as the imp removes his tongue. He smirks at your [vagina] and kneels"); 
-			if (player.isBiped()) outputText(" between your legs");
-			else outputText(" before you");
-			outputText(", draping his " + monster.cockDescriptShort(0) + " across your wet crotch.  You groan, and unintentionally thrust against the magnificent tool between your legs.  The imp chuckles evilly as you coat his " + monster.cockDescriptShort(0) + " in your girl juice, but he doesn't wait long before he slowly presses his head down against your [vagina].  His head slowly spreads your lips; the pleasure is unmistakable, and forces a loud moan from your lips.");
-			
-			outputText("\n\nWith a soft pop, the " + monster.cockDescriptShort(0) + " pops into your [vagina], and both of you moan in unison, the demon beginning to thrust wildly into you.  His hips pumps back and forth into you.  The loud slapping sound of flesh on flesh echoes around you, drowning out the grunts of the vicious demon above you.");
+
+			// Biped?
+			if (player.isBiped())  outputText(" between your legs");
+			else                   outputText(" before you");
+			outputText(", draping his " + monster.cockDescript(0) + " across your wet crotch.  You groan, and unintentionally thrust against the magnificent tool between your legs.  The imp chuckles evilly as you coat his " + monster.cockDescript(0) + " in your girl juice, but he doesn't wait long before he slowly presses his head down against your [vagina].  His head slowly spreads your lips; the pleasure is unmistakable, and forces a loud moan from your lips.");
+			outputText("\n\nWith a soft pop, the " + monster.cockDescript(0) + " pops into your [vagina], and both of you moan in unison, the demon beginning to thrust wildly into you.  His hips pumps back and forth into you.  The loud slapping sound of flesh on flesh echoes around you, drowning out the grunts of the vicious demon above you.");
+
 			player.cuntChange(monster.cockArea(0),true,true,false);
 			
-			outputText("\n\nYou mewl softly as you're viciously fucked by the beast above you.  It doesn't take long before your [vagina] clenches tightly around the " + monster.cockDescriptShort(0) + " as you orgasm.  You scream in pleasure as your inner walls begin to milk the imp's " + monster.cockDescriptShort(0) + " of its seed.  The imp quickly succumbs and cums, his swollen balls tightening up against his crotch.  The hot jizz continues to pump into you for what feels like several painfully long minutes, until your belly bulges slightly, and your " + player.vaginaDescript(0) + " begins to leak the white demonic fluid.");
-			
+			outputText("\n\nYou mewl softly as you're viciously fucked by the beast above you.  It doesn't take long before your [vagina] clenches tightly around the " + monster.cockDescript(0) + " as you orgasm.  You scream in pleasure as your inner walls begin to milk the imp's " + monster.cockDescript(0) + " of its seed.  The imp quickly succumbs and cums, his swollen balls tightening up against his crotch.  The hot jizz continues to pump into you for what feels like several painfully long minutes, until your belly bulges slightly, and your " + player.vaginaDescript(0) + " begins to leak the white demonic fluid.");
 			outputText("\n\nThe imp pulls out, and gives himself a few final strokes, sending one last shot of cum across your face.  You blush in embarrassment and wipe the sticky seed from your nose and lips.  Standing up, the imp presses a hoof down hard on your distended stomach, making you gasp loudly as the demon's thick cum is forced back out of your [vagina], pooling between your legs. The imp gives a satisfied smirk and flies off, leaving you to clean up.");
-			
 			outputText("\n\nYou stand up weakly after several moments, and gather your [armor].  It takes you a while to get dressed in your defeated state, but you manage to crawl back towards your camp.  Your [vagina] is still leaking some of the demonic cum, but you try not to worry about it as you arrive, collapsing almost immediately.");
+
+			// Stats & shit
 			player.orgasm();
-			dynStats("cor", 1);
+			dynStats("cor", overlord ? 2 : 1);
+			player.knockUp(PregnancyStore.PREGNANCY_IMP, PregnancyStore.INCUBATION_IMP - (overlord ? 48 : 24));
 			player.slimeFeed();
 			combat.cleanupAfterCombat();
 		}
@@ -2004,103 +2001,179 @@ package classes.Scenes.Monsters
 			combat.cleanupAfterCombat();
 		}
 
-		public function loseToAnImpOverlord():void {
-			clearOutput();
-			if (player.hasVagina() && (player.gender == 2 || rand(2) == 0) && flags[kFLAGS.SFW_MODE] <= 0) getRapedAsAGirlByImpOverlord();
-			else if (player.hasCock() && flags[kFLAGS.SFW_MODE] <= 0) loseToImpOverlord();
-			else {
-				outputText("Taking a look at your defeated form, the " + monster.short + " snarls, \"<i>Useless,</i>\" before kicking you in the head, knocking you out cold.");
-				player.takeDamage(9999);
-				combat.cleanupAfterCombat();
-			}
+		private function impPetrifyable():Boolean
+		{
+			return player.isBasilisk() && flags[kFLAGS.CAMP_WALL_PROGRESS] >= 100;
 		}
-		
-		private function loseToImpOverlord():void {
-			clearOutput();
-			if (doSFWloss()) return;
-			outputText(images.showImage("impoverlord-loss-male"), false);
-			outputText("Unable to control your lust you fall to the ground, remove your " + player.armorName + " and begin masturbating furiously.  The powerful imp saunters over to you smirking evilly as he towers over your fallen form. You look up at him nervously.  He grabs your chin with one of his clawed hands, while the other digs through his satchel.  He pulls out a vial filled with glowing green liquid, and pops the cork stopper off with his thumb. Before you can react, the demon forces open your mouth and pours the liquid in.  Instinct reacts fast then logic and you swallow the substance as it's poured down your throat.");
-			outputText("\n\nYou cough and splutter, grabbing your gut, as a hot pain fills your stomach.  The imp laughs as you roll around in agony for several long moments, before the burning turns to an arousing warmth that spreads to your [hips] and [asshole].  Groaning, you feel your cheeks flush with arousal, and your eyes glaze over once more with insatiable lust.");
-			if (player.cockTotal() == 1) {
-				outputText("\n\nYou feel your " + player.cockDescript(0) + " grow harder than usual and throb.  You go to stroke yourself but it's far too sensitive. Any stroking you can do is far too little stimulation and anything else is too painful to withstand.  You whimper and curse in desperation.  Your lust clouded mind can only think of one solution; you bend over and reveal your [asshole] to the grinning imp.  The humiliation keeps you from looking back to see the imp's reaction, but you can tell by his chuckle that this is exactly what he wanted.");
+
+		private function addKillPetrifyButtons(killButtonPos:Number = NaN, petriButtonPos:Number = NaN):Boolean
+		{
+			var buttonCount:int = 0;
+
+			if (monster.short == "imp overlord") return false;
+
+			if (isNaN(killButtonPos)) killButtonPos = 0;
+			if (killButtonPos >= 0 && monster.HP < 1) {
+				addButton(killButtonPos, "Kill Him", killImp);
+				buttonCount++;
 			}
-			else if (player.cockTotal() > 1) {
-				outputText("\n\nYou feel your " + player.multiCockDescriptLight() + " grow harder than usual and throb.  You go to stroke yourself but they are far too sensitive. Any stroking you can do is far too little stimulation and anything else is too painful to withstand.  You whimper and curse in desperation.  Your lust clouded mind can only think of one solution; you bend over and reveal your " + player.assholeDescript() + " to the grinning imp.  The humiliation keeps you from looking back to see the imp's reaction, but you can tell by his chuckle that this is exactly what he wanted.");
+
+			if (isNaN(petriButtonPos)) petriButtonPos = killButtonPos + 1;
+			if (impPetrifyable()) {
+				addButton(petriButtonPos, "Petrify Him", petrifyImp);
+				buttonCount++;
 			}
-			outputText("\n\nThe imp gets behind you; his corrupt presence makes the air feel heavy and hard to breathe.  You notice his satchel and loincloth get carelessly tossed to the ground.  Chancing a glance back, you look in aroused horror at the " + monster.cockDescript(0) + " between the imp's legs as well as his matching cum-filled balls.  Two clawed, red hands spread your [butt] revealing your [asshole].  Mercifully, the demon decides you'll need some form of lubrication and relaxation before he continues.  He leans forward and presses his tongue between your [butt] and begins lapping at your [asshole] viciously.  You can't help but mewl from the merciless attack on your tender rectum.");
-			
-			//if (player has a vagina)
-			if (player.hasVagina()) {
-				outputText("\n\nThe imp takes a moment to pleasure your [vagina], forcing his tongue and two clawed fingers inside.  The claws scratch and tease painfully at your inner walls.  You mewl and cry out from the stimulation, as the imp's tongue moves from your [vagina] to your [clit].  You cry out in desperation as the powerful demon attacks your [clit] with his tongue.");
-			}
-			else if (player.balls > 0 && player.hasCock()) {
-				outputText("\n\nThe imp moves away from your [asshole], and begins to focus on your [balls].  He pulls one into his hand, and squeezes it cruelly while he licks and bites at your [sack].  He gives a painfully tight squeeze to the orb in his hand, which makes you cry out in painful ecstasy.  A single bead of precum gets forced out of your " + player.cockDescript(0) + ".");
-			}
-			outputText("  You watch as the imp stands up and removes his loincloth to reveal his demonic member.  He doesn't even have to remove his armor!");			
-			outputText("\n\nThe imp finally backs off from his brutal attack on your sensitive backside.  Whatever was in that vial has made your body incredibly sensitive... each caress feels like an orgasm, and each scratch feels like a stab wound.  You hope that's the only effect of the green liquid, but don't get much chance to ponder it as you feel the muscular demon press the head of his " + monster.cockDescript(0) + " against your [asshole].");
-			
-			outputText("\n\nYou whimper in fear as you look back towards the devilish imp behind you.  He simply grins at you in response as he thrusts forward.  You yell out in pain as the " + monster.cockDescript(0) + " forces its way into your [asshole].  You try to struggle away, but the imp gives you a very rough slap on the ass.  He then roughly grabs your [hips], making sure to dig his claws in just enough to deter you from struggling.");
-			player.buttChange(monster.cockArea(0),true,true,false);
-			
-			outputText("\n\nThough the entry was rough, the imp's thrusts are incredibly gentle.  He carefully thrusts in and out of your [asshole], and even begins licking and delicately kissing your back.  The horrible stretching of your [asshole] is still incredibly painful, but made tolerable by the contrasting caresses.  You quickly lose track of time as the pain and pleasure spark across your overly sensitive body.  The imp continues to be oddly affectionate now that you've fully submitted to his will.  He even releases his painful, clawed grip on your [hips].");
-			
-			outputText("\n\nAfter longer then you'd have hoped for, the painful stretching sensation begins to disappear; and the pleasurable sensation of the imp's " + monster.cockDescript(0) + " thrusting in and out of your [asshole] becomes entirely pleasurable.  The way his " + monster.cockDescript(0) + " fills every inch of your ass, and rubs all your most sensitive spots.  The weird sensation his warm, demonic pre-cum coats your insides.  You find your lust-blinded mind has become lost in the sensations - so lost that you don't even notice the imp increasing his pace.");
-			
-			outputText("\n\nWithin moments the beast is wildly thrusting in and out of your [asshole].  Pre-cum is pumping out of his " + monster.cockDescript(0) + " like a faucet. The hot demon pre begins to spill back out of your abused [asshole], coating your [hips], and dripping to the ground beneath.  The imp gives you a few more rough thrusts before cumming hard into your [asshole].  The little demon's " + monster.cockDescript(0) + " spasms as he continues to roughly thrust and pump you full of his burning hot demon seed.");
-			
-			if (player.hasCock()) {
-				outputText("\n\nThe hot seed filling your belly wakes you from your lust induced daydream and you howl in discomfort.  Your belly begins to swell with the thick seed, coating every inch of your insides with the burning, arousing sensation.  This pushes you over the edge and you orgasm.  ");
-				if (player.balls > 0) outputText("Your [balls] clench up against your body, desperate to finally expel their contents.  ");
-				outputText("Your seed spills across the ground, mixing with the copious amount of demon pre that had sloshed to the ground earlier.  You howl loudly in pleasure, as you're finally given release.");
-			}
-			
-			outputText("\n\nThe imp pulls out, but is quick to stuff a soft unknown object into your [asshole] to plug all of his delicious, corrupt seed inside of you.  You stay in position, though you're wobbling slightly from the intense experience.  The short, muscular demon looks down at you, and you look up at him concerned.  He chuckles, \"<i>Don't worry my bitch, that thing will dissolve on its own in a day or so,</i>\" the demon assures you.  He grips his " + monster.cockDescript(0) + ", which is soaked with his own juices, and holds it out towards you.");
-			
-			outputText("\n\nYou take the hint and nervously lick the cock clean.  You can taste the corruption, and it sends sparks through your mind.  You almost wish it didn't have to end, but soon the imp is satisfied with your cleaning job, gathers his things and turns to leave you to recover from your ordeal.  Within minutes of him leaving you pass out, collapsing to the ground.  You lay there, in a puddle of sexual fluids for a long time before you wake up.  After gathering your equipment, you begin to make your way back to camp.  Hopefully that green stuff's effects will have worn off once you get back.");
-			player.orgasm();
-			dynStats("sen", 2, "cor", 1);
-			player.slimeFeed();
-			combat.cleanupAfterCombat();
+
+			return buttonCount > 0;
 		}
-		
-		//FEMALE LOSE
-		private function getRapedAsAGirlByImpOverlord():void {
-			clearOutput();
-			if (doSFWloss()) return;
-			outputText(images.showImage("impoverlord-loss-female"), false);
-			outputText("You collapse from exhaustion, your [vagina] beginning to soak your [armor].  You groan loudly, desperately trying to continue the fight, or flee, but the exhaustion is too much.  You close your eyes for a moment, but hearing a loud thud near your face causes you to painfully open your eyes.  You see a large bestial hoof near your face, while the other hoof is used to roll you onto your back.");
-			
-			outputText("\n\nYou try to move, but before you can even begin to squirm a hoof presses hard between your " + player.breastDescript(0) + ".  You gasp as the air is temporarily knocked out of your lungs.  The demon chuckles at your last feeble attempt to free yourself.  He holds his " + monster.cockDescript(0) + " stroking it lewdly, a cruel smirk stretching across his face.  You watch as several beads of pre begin to drip from his tip onto your stomach.");
-			
-			outputText("\n\nThe imp steps between your legs, gently kicking them apart, until the wet spot on your [armor] is painfully obvious.  He chuckles, and leans down, ripping your [armor] off.  He casually tosses it to the side, and leans towards your [vagina].");
-			
-			//if (Player has balls)
-			if (player.balls > 0) {
-				outputText("\n\nThe imp pulls your [balls] up, revealing your [vagina].  Unceremoniously, he presses his lips towards your crotch forcing his tongue into your [vagina], making you gasp in pleasure.  He gives your [balls] a rough squeeze, making your [vagina] even wetter then it was.  The imp moans in delight, licking up all your girl juices.");
+
+		private function petrifyImp():void
+		{
+			var winText:String = "";
+			var winText2:String = "";
+			var skullText:String = "";
+			var benoitE:String = getGame().bazaar.benoit.benoitMF("Benoit", "Benoite");
+
+			output.clear();
+			if (monster.HP >= 1 && (50 + 50 * (1 - monster.HPRatio())) < rand(100)) {
+				output.text("You decide to teach this imp and his buddies a lesson that won't be forgotten. You grab the imp roughly, making sure you"
+				           +" have his attention as you make eye contact. The imp struggles in your grasp and manages to struggle himself free.");
+				output.text("\n\nPerhaps your should have beaten him down a little" + (monster.HPRatio() < 1 ? " more" : "") 
+				           +", before you've attempted the turn him into a statue?");
+				doNext(combat.cleanupAfterCombat);
+				return;
 			}
-			else {
-				outputText("\n\nThe imp roughly forces his tongue into your [vagina] making you gasp in pleasure.  Your [vagina] clenches around the demonic tongue, squirting some of your girl juices around the wet flesh as it delves deeper into you.  You writhe and squirm trying to fight against the forced pleasure.");
+
+			if (flags[kFLAGS.IMPS_PETRIFIED] <= 0) { // First time
+				flags[kFLAGS.IMPS_PETRIFIED] = 0; // Failsafe
+
+				if (monster.HP < 1) {
+					winText = "the beaten and bruised creature cowering teary-eyed,";
+					winText2 = "";
+				} else { // won by lust texts
+					winText = "the pathetically masturbating creature too focused on his blighted cock,";
+					winText2 = "though his hand remains on his prick,";
+				}
+				if (flags[kFLAGS.CAMP_WALL_SKULLS] > 0)
+					skullText = "heedless of the clear warning your wall presents.";
+				else
+					skullText = "no matter how many you beat.";
+
+				output.text("As you look at the imp before you, " + winText + " you feel disgusted. These vermin keep trying to invade your camp and"
+				           +" fuck you senseless " + skullText)
+				      .text("\n\nYou think back to your explorations in the high mountains, the dangers of the peaks keeping these creatures far"
+				           +" away. Even you have been deterred by the shrill harpies with their talons and the treacherous basilisks petrification."
+				           +" You then smirk, a brilliant [if (corruption >= 30) malicious] idea coming to mind. Thanks to " + benoitE
+				           +" you have basilisk eyes, surely the petrification you suffered at their hands before would deter these corrupt spawn as"
+				           +" it has you.")
+				      .text("\n\nYou blink slowly and ready yourself, grabbing the imp by the scruff of his neck. He seems confused " + winText2
+				           +" as you align him with your gaze. As you make direct eye contact he flinches and freezes, mesmerised by your gaze."
+				           +" You feel a link form from the edge of your mind to the imps, like a slowly flowing waterfall, it crashing into him"
+				           +" full force.")
+				      .text("\n\nYou remember how the basilisks used this compulsion to keep your gaze while your body slowly turned to stone,"
+				           +" the soothing feeling and the hushed and raspy whisper swaddling you as the stone did. You start to feed your thoughts"
+				           +" over to the imp, calming him with your words, telling him to keep looking into your eyes and to let all his worries"
+				           +" just fade away. To embrace the feeling of being cocooned and the warmth your gaze brings from the cold he feels."
+				           +" You watch somewhat surprised as he shudders when he tries to look away,"
+				           +" as if a bitter winter wind had rushed against him.")
+				      .text("\n\nYou see his eyes start to become glassy and know it is time. You blink once, the small loss of eye contact making"
+				           +" him whine pitifully. As you meet his eyes again, a layer of marble starting to form at his feet. You let go of him and"
+				           +" he remains in front of you, as if supported by puppet strings, and you are the stage master. The stone continues to"
+				           +" creep up his frame, his limbs hardening into place as it does."
+				           +" Soon his legs are covered and his midsection follows swiftly.")
+				      .text("\n\nYou shut the link between you with a smirk, watching as his dazed expression fades. When he groggily looks down he"
+				           +" begins to shout, trying to free himself with all his might, though with his legs completely turned and the stone"
+				           +" rapidly rising you know he has no chance. The stone has almost formed up to his shoulders now, his arms feeling leaden"
+				           +" as he struggles fruitlessly. You watch in fascination as the imp is consumed by the stone, his cursing fading into"
+				           +" nothingness, while his expression of rage and terror is trapped on his face for eternity.")
+				      .text("\n\nOnce you are sure the imp is truly transfigured you reach out to touch the statue. Your fingers are met with smooth,"
+				           +" cool stone and as you push it gently, you realise the statue is quite solid.");
+			} else {
+				output.text("You decide to teach this imp and his buddies a lesson that won't be forgotten. You grab the imp roughly, making sure you"
+				           +" have his attention as you make eye contact. The imp struggles in your grasp but as you slowly blink, your gaze now"
+				           +" fully on him, you feel him stiffen. He becomes sluggish and finds it hard to resist as your mind reaches into his. As"
+				           +" you soothe the imp with nonsense you see his will to fight begin to ebb away. Your calming speech washes over him as"
+				           +" his gaze becomes unfocused, his eyes not leaving yours out of imagined consequences.")
+				      .text("\n\nYou blink and let your gaze reach its full power, the imp making a pathetic whimper as you leave its mind silent for"
+				           +" that split second. A layer of marble starts to engulf his feet, crawling up his frame the longer he looks into those"
+				           +" glossy eyes of yours. You see the stone begin to harden as it creeps over his legs and let the link to his mind go"
+				           +" with a sudden jolt. He comes back around as the stone begins to coat his midsection, startled into a panic by the sight"
+				           +" of his now solidified lower body.")
+				      .text("\n\nNo matter how much he struggles against the stone, it won't budge, his eyes wide as he look at you. He curses and"
+				           +" rants at you before lapsing into begging, pleading with you to let him go. His pleas fall upon deaf ears of course, a"
+				           +" champion would never give perverted vermin mercy when they would never offer it back. As the stone reaches his neck you"
+				           +" simply watch, curious of what expression the statue will have when it's all over. As your gaze finishes petrifying the"
+				           +" imp you ready yourself for the [if (strength < 90) long] trip back.");
 			}
-			
-			outputText("\n\nYou mewl pitifully as the imp removes his tongue. He smirks at your [vagina] and kneels"); 
-			if (player.isBiped()) outputText(" between your legs");
-			else outputText(" before you");
-			outputText(", draping his " + monster.cockDescript(0) + " across your wet crotch.  You groan, and unintentionally thrust against the magnificent tool between your legs.  The imp chuckles evilly as you coat his " + monster.cockDescript(0) + " in your girl juice, but he doesn't wait long before he slowly presses his head down against your [vagina].  His head slowly spreads your lips; the pleasure is unmistakable, and forces a loud moan from your lips.");
-			
-			outputText("\n\nWith a soft pop, the " + monster.cockDescript(0) + " pops into your [vagina], and both of you moan in unison, the demon beginning to thrust wildly into you.  His hips pumps back and forth into you.  The loud slapping sound of flesh on flesh echoes around you, drowning out the grunts of the vicious demon above you.");
-			player.cuntChange(monster.cockArea(0),true,true,false);
-			
-			outputText("\n\nYou mewl softly as you're viciously fucked by the beast above you.  It doesn't take long before your [vagina] clenches tightly around the " + monster.cockDescript(0) + " as you orgasm.  You scream in pleasure as your inner walls begin to milk the imp's " + monster.cockDescript(0) + " of its seed.  The imp quickly succumbs and cums, his swollen balls tightening up against his crotch.  The hot jizz continues to pump into you for what feels like several painfully long minutes, until your belly bulges slightly, and your " + player.vaginaDescript(0) + " begins to leak the white demonic fluid.");
-			
-			outputText("\n\nThe imp pulls out, and gives himself a few final strokes, sending one last shot of cum across your face.  You blush in embarrassment and wipe the sticky seed from your nose and lips.  Standing up, the imp presses a hoof down hard on your distended stomach, making you gasp loudly as the demon's thick cum is forced back out of your [vagina], pooling between your legs. The imp gives a satisfied smirk and flies off, leaving you to clean up.");
-			
-			outputText("\n\nYou stand up weakly after several moments, and gather your [armor].  It takes you a while to get dressed in your defeated state, but you manage to crawl back towards your camp.  Your [vagina] is still leaking some of the demonic cum, but you try not to worry about it as you arrive, collapsing almost immediately.");
-			player.orgasm();
-			dynStats("cor", 1);
-			player.slimeFeed();
-			combat.cleanupAfterCombat();
+			flags[kFLAGS.IMPS_PETRIFIED]++;
+			flags[kFLAGS.BASILISK_RESISTANCE_TRACKER] += 10;
+			//if (player.cor < 25) dynStats("cor", -0.5);
+			menu();
+			var toolTipText:String = "Carry the statue back to your camp to place it on or in front of your wall";
+			var toolTipHeader:String = "Carry the statue to the camp";
+			addButton(0, "Take Statue", curry(combat.cleanupAfterCombat, takeStatue), null, null, null, toolTipText, toolTipHeader);
+			addButton(1, "Leave", combat.cleanupAfterCombat);
 		}
-		
+
+		private function takeStatue():void
+		{
+			var timeToReturn:int = 1;
+			if (player.str < 90) timeToReturn++;
+			if (player.str < 70) timeToReturn++;
+			if (player.str < 40) timeToReturn++;
+			trace("player.str:", player.str);
+			trace("timeToReturn:", timeToReturn);
+
+			var timeText:String = "";
+			timeText = timeToReturn > 1 ? num2Text(timeToReturn) + " hours" : "hour";
+
+			output.clear();
+			if (flags[kFLAGS.CAMP_WALL_STATUES] <= 0) { // First time carrying it back
+				flags[kFLAGS.CAMP_WALL_STATUES] = 0; // Failsafe
+				switch (timeToReturn) {
+					case 1: // str 90+ --> 1 hour
+						output.text("You heft the statue onto your shoulder with a practised ease, as it is as light as a small wooden log for"
+						           +" you. As you spend the next hour carrying it back to camp, you feel frustrated at the land for making your"
+						           +" trip so long. You put the statue down near your camp wall as you wonder how effective it will be at keeping"
+						           +" these pests away.");
+						break;
+
+					case 2: // str 70-89 --> 2 hours
+						output.text("You heft the statue onto your back with a practised ease, though maneuvering with the bulky thing is harder"
+						           +" than you expected. For something so small, it sure is heavy. As you spend the next couple of hours carrying it"
+						           +" back to camp, you feel frustrated at the land for making your journey so long. You put the statue down near"
+						           +" your camp wall, stretching and rubbing at the sore spots on your back and shoulders as you wonder how"
+						           +" effective it will be at keeping these pests away.");
+						break;
+
+					case 3: // str 40-69 --> 3 hours, 10 fatigue
+					case 4: // str < 40  --> 4 hours, 20 fatigue
+						output.text("You try to lift the statue, but are simply unable to. You huff angrily as you pace around it, trying to"
+						           +" figure out how you can get it back to camp. You look through your belongings and around the area for something"
+						           +" to help you move the damned thing. After 20 minutes of searching you manage to find enough resources to make a"
+						           +" small sled that you can pull along with some rope. You position it behind the statue and kick the statue over,"
+						           +" smiling a little as you let out some of that anger. With the statue soon secured in place you begin the long"
+						           +" trek home, dragging the statue behind you. By the time you reach the camp you are exhausted, your arms and"
+						           +" legs burning in protest of the excessive labour transporting this thing took. Panting, you untie the statue"
+						           +" and drag it up to lean against the camp wall, hoping the damned thing was worth dragging here.");
+					// default: // there is no default. All possible cases are handled ...
+				}
+			} else {
+				output.text("In the " + timeText + " it takes to [if (strength >= 70) carry|drag] the statue back to camp, you don't encounter"
+				           +" any further trouble, though you're sure the sight of the statue, which you now place around your wall,"
+				           +" helped with that. Maybe it'll help here too.");
+			}
+			flags[kFLAGS.CAMP_WALL_STATUES]++;
+			if (flags[kFLAGS.CAMP_WALL_STATUES] == 1) {
+				output.text("\n\n<b>You now have a marble imp statue at camp!</b>");
+			} else {
+				output.text("\n\n<b>You now have " + num2Text(flags[kFLAGS.CAMP_WALL_STATUES]) + " marble imp statues at camp!</b>");
+			}
+			if (timeToReturn >= 3) player.changeFatigue(10);
+			if (timeToReturn >= 4) player.changeFatigue(10);
+			doNext(curry(camp.returnToCamp, timeToReturn));
+		}
+
 		private function killImp():void {
 			clearOutput();
 			flags[kFLAGS.IMPS_KILLED]++;

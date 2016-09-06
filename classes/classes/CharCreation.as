@@ -196,18 +196,15 @@
 			}
 			player.wingType = WING_TYPE_NONE;
 			player.wingDesc = "non-existant";
+			if (player.eyeType == EYES_BASILISK) player.eyeType = EYES_LIZARD; // Silently change them to be lizard eyes again. Simple and stupid ;)
 			//Default
 			player.skinTone = "light";
+			player.clawTone = "";
 			player.hairColor = "brown";
 			player.hairType = HAIR_NORMAL;
 			player.beardLength = 0;
 			player.beardStyle = 0;
 			//Exploration
-			player.explored = 0;
-			player.exploredForest = 0;
-			player.exploredDesert = 0;
-			player.exploredMountain = 0;
-			player.exploredLake = 0;
 			if (flags[kFLAGS.NEW_GAME_PLUS_LEVEL] == 0) {
 				//Inventory clear
 				player.itemSlot1.unlocked = true;
@@ -240,13 +237,10 @@
 				player.nosePShort = "";
 				player.nosePLong = "";
 			}
-			//PLOTZ
-			kGAMECLASS.monk = 0;
-			kGAMECLASS.whitney = 0;
-			kGAMECLASS.sand = 0;
-		//Replaced by flag	kGAMECLASS.beeProgress = 0;
-			kGAMECLASS.giacomo = 0;
+
+			// Init none-flag plot variables (The few there still are...)
 			kGAMECLASS.isabellaScene.isabellaOffspringData = []; //CLEAR!
+
 			//Lets get this bitch started
 			kGAMECLASS.inCombat = false;
 			kGAMECLASS.inDungeon = false;
@@ -397,7 +391,8 @@
 		private function chooseName():void {
 			if (mainView.nameBox.text == "") {
 				//If part of newgame+, don't fully wipe.
-				if (player.XP > 0 && player.explored == 0) {
+				// Isn't this redundant? This is covered in `newGameGo`.
+				if (player.XP > 0) {
 					flags[kFLAGS.NEW_GAME_PLUS_BONUS_STORED_XP] = player.XP;
 					if (flags[kFLAGS.NEW_GAME_PLUS_BONUS_STORED_XP] == 0) flags[kFLAGS.NEW_GAME_PLUS_BONUS_STORED_XP] = 1;
 					while (player.level > 1) {
@@ -729,6 +724,7 @@
 
 		private function setComplexion(choice:String):void { //And choose hair
 			player.skinTone = choice;
+			player.clawTone = "";
 			clearOutput();
 			outputText("You selected a " + choice + " complexion.\n\nWhat color is your hair?");
 			menu();

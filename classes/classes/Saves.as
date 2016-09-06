@@ -2,6 +2,7 @@
 {
 
 	import classes.GlobalFlags.kGAMECLASS;
+	import classes.GlobalFlags.kACHIEVEMENTS;
 	import classes.Scenes.Inventory;
 	import classes.Scenes.Places.TelAdre.Katherine;
 
@@ -622,6 +623,8 @@ public function savePermObject(isFile:Boolean):void {
 		saveFile.data.flags[kFLAGS.USE_12_HOURS] = flags[kFLAGS.USE_12_HOURS];
 		saveFile.data.flags[kFLAGS.AUTO_LEVEL] = flags[kFLAGS.AUTO_LEVEL];
 		saveFile.data.flags[kFLAGS.USE_METRICS] = flags[kFLAGS.USE_METRICS];
+		saveFile.data.flags[kFLAGS.DISABLE_QUICKLOAD_CONFIRM] = flags[kFLAGS.DISABLE_QUICKLOAD_CONFIRM];
+		saveFile.data.flags[kFLAGS.DISABLE_QUICKSAVE_CONFIRM] = flags[kFLAGS.DISABLE_QUICKSAVE_CONFIRM];
 		//achievements
 		saveFile.data.achievements = [];
 		for (i = 0; i < achievements.length; i++)
@@ -632,6 +635,8 @@ public function savePermObject(isFile:Boolean):void {
 				saveFile.data.achievements[i] = achievements[i];
 			}
 		}
+		if (getGame().permObjVersionID != 0)
+			saveFile.data.permObjVersionID = getGame().permObjVersionID;
 	}
 	catch (error:Error)
 	{
@@ -666,6 +671,8 @@ public function loadPermObject():void {
 			if (saveFile.data.flags[kFLAGS.USE_12_HOURS] != undefined) flags[kFLAGS.USE_12_HOURS] = saveFile.data.flags[kFLAGS.USE_12_HOURS];
 			if (saveFile.data.flags[kFLAGS.AUTO_LEVEL] != undefined) flags[kFLAGS.AUTO_LEVEL] = saveFile.data.flags[kFLAGS.AUTO_LEVEL];
 			if (saveFile.data.flags[kFLAGS.USE_METRICS] != undefined) flags[kFLAGS.USE_METRICS] = saveFile.data.flags[kFLAGS.USE_METRICS];
+			if (saveFile.data.flags[kFLAGS.DISABLE_QUICKLOAD_CONFIRM] != undefined) flags[kFLAGS.DISABLE_QUICKLOAD_CONFIRM] = saveFile.data.flags[kFLAGS.DISABLE_QUICKLOAD_CONFIRM];
+			if (saveFile.data.flags[kFLAGS.DISABLE_QUICKSAVE_CONFIRM] != undefined) flags[kFLAGS.DISABLE_QUICKSAVE_CONFIRM] = saveFile.data.flags[kFLAGS.DISABLE_QUICKSAVE_CONFIRM];
 		}
 		//achievements, will check if achievement exists.
 		if (saveFile.data.achievements) {
@@ -674,6 +681,22 @@ public function loadPermObject():void {
 				if (saveFile.data.achievements[i] != undefined)
 					achievements[i] = saveFile.data.achievements[i];
 			}
+		}
+
+		if (saveFile.data.permObjVersionID != undefined) {
+			getGame().permObjVersionID = saveFile.data.permObjVersionID;
+			trace("Found internal permObjVersionID:", getGame().permObjVersionID);
+		}
+
+		if (getGame().permObjVersionID < 1039900) {
+			// apply fix for issue #337 (Wrong IDs in kACHIEVEMENTS conflicting with other achievements)
+			achievements[kACHIEVEMENTS.ZONE_EXPLORER] = 0;
+			achievements[kACHIEVEMENTS.ZONE_SIGHTSEER] = 0;
+			achievements[kACHIEVEMENTS.GENERAL_PORTAL_DEFENDER] = 0;
+			achievements[kACHIEVEMENTS.GENERAL_BAD_ENDER] = 0;
+			getGame().permObjVersionID = 1039900;
+			savePermObject(false);
+			trace("PermObj internal versionID updated:", getGame().permObjVersionID);
 		}
 	}
 }
@@ -831,7 +854,7 @@ public function saveGameObject(slot:String, isFile:Boolean):void
 		saveFile.data.furColor = player.furColor;
 		saveFile.data.hairColor = player.hairColor;
 		saveFile.data.hairType = player.hairType;
-		saveFile.data.gills = player.gills;
+		saveFile.data.gillType = player.gillType;
 		saveFile.data.armType = player.armType;
 		saveFile.data.hairLength = player.hairLength;
 		saveFile.data.beardLength = player.beardLength;
@@ -1028,17 +1051,8 @@ public function saveGameObject(slot:String, isFile:Boolean):void
 		saveFile.data.ass.analWetness = player.ass.analWetness;
 		saveFile.data.ass.analLooseness = player.ass.analLooseness;
 		saveFile.data.ass.fullness = player.ass.fullness;
-		//EXPLORED
-		saveFile.data.exploredLake = player.exploredLake;
-		saveFile.data.exploredMountain = player.exploredMountain;
-		saveFile.data.exploredForest = player.exploredForest;
-		saveFile.data.exploredDesert = player.exploredDesert;
-		saveFile.data.explored = player.explored;
-		saveFile.data.foundForest = getGame().foundForest;
-		saveFile.data.foundDesert = getGame().foundDesert;
-		saveFile.data.foundMountain = getGame().foundMountain;
-		saveFile.data.foundLake = getGame().foundLake;
-		saveFile.data.gameState = gameStateGet();
+
+		saveFile.data.gameState = gameStateGet(); // Saving game state?
 		
 		//Time and Items
 		saveFile.data.minutes = model.time.minutes;
@@ -1046,13 +1060,7 @@ public function saveGameObject(slot:String, isFile:Boolean):void
 		saveFile.data.days = model.time.days;
 		saveFile.data.autoSave = player.autoSave;
 		
-		//PLOTZ
-		saveFile.data.whitney = getGame().whitney;
-		saveFile.data.monk = getGame().monk;
-		saveFile.data.sand = getGame().sand;
-		saveFile.data.giacomo = getGame().giacomo;
-		saveFile.data.beeProgress = 0; //Now saved in a flag. getGame().beeProgress;
-		
+		// Save non-flag plot variables.
 		saveFile.data.isabellaOffspringData = [];
 		for (i = 0; i < kGAMECLASS.isabellaScene.isabellaOffspringData.length; i++) {
 			saveFile.data.isabellaOffspringData.push(kGAMECLASS.isabellaScene.isabellaOffspringData[i]);
@@ -1377,7 +1385,12 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 			if (saveFile.data.flags[i] != undefined)
 				flags[i] = saveFile.data.flags[i];
 		}
-		
+
+		if (saveFile.data.versionID != undefined) {
+			game.versionID = saveFile.data.versionID;
+			trace("Found internal versionID:", game.versionID);
+		}
+
 		//PIERCINGS
 		
 		//trace("LOADING PIERCINGS");
@@ -1635,10 +1648,12 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 			player.hairType = 0;
 		else
 			player.hairType = saveFile.data.hairType;
-		if (saveFile.data.gills == undefined)
-			player.gills = false;
+		if (saveFile.data.gillType != undefined)
+			player.gillType = saveFile.data.gillType;
+		else if (saveFile.data.gills == undefined)
+			player.gillType = GILLS_NONE;
 		else
-			player.gills = saveFile.data.gills;
+			player.gillType = saveFile.data.gills ? GILLS_ANEMONE : GILLS_NONE;
 		if (saveFile.data.armType == undefined)
 			player.armType = ARM_TYPE_HUMAN;
 		else
@@ -2127,17 +2142,7 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 		player.ass.analWetness = saveFile.data.ass.analWetness;
 		player.ass.fullness = saveFile.data.ass.fullness;
 		
-		//Shit
-		gameStateSet(saveFile.data.gameState);
-		player.exploredLake = saveFile.data.exploredLake;
-		player.exploredMountain = saveFile.data.exploredMountain;
-		player.exploredForest = saveFile.data.exploredForest;
-		player.exploredDesert = saveFile.data.exploredDesert;
-		player.explored = saveFile.data.explored;
-		game.foundForest = saveFile.data.foundForest;
-		game.foundDesert = saveFile.data.foundDesert;
-		game.foundMountain = saveFile.data.foundMountain;
-		game.foundLake = saveFile.data.foundLake;
+		gameStateSet(saveFile.data.gameState);  // Loading game state
 		
 		//Days
 		//Time and Items
@@ -2149,16 +2154,19 @@ public function loadGameObject(saveData:Object, slot:String = "VOID"):void
 		else
 			player.autoSave = saveFile.data.autoSave;
 		
-		//PLOTZ
-		game.whitney = saveFile.data.whitney;
-		game.monk = saveFile.data.monk;
-		game.sand = saveFile.data.sand;
-		if (saveFile.data.giacomo == undefined)
-			game.giacomo = 0;
-		else
-			game.giacomo = saveFile.data.giacomo;
-		if (saveFile.data.beeProgress != undefined && saveFile.data.beeProgress == 1) game.forest.beeGirlScene.setTalked(); //Bee Progress update is now in a flag
-			//The flag will be zero for any older save that still uses beeProgress and newer saves always store a zero in beeProgress, so we only need to update the flag on a value of one.
+		// Fix possible old save for Plot & Exploration
+		flags[kFLAGS.TIMES_EXPLORED_LAKE]     = (flags[kFLAGS.TIMES_EXPLORED_LAKE] || saveFile.data.exploredLake);
+		flags[kFLAGS.TIMES_EXPLORED_MOUNTAIN] = (flags[kFLAGS.TIMES_EXPLORED_MOUNTAIN] || saveFile.data.exploredMountain);
+		flags[kFLAGS.TIMES_EXPLORED_FOREST]   = (flags[kFLAGS.TIMES_EXPLORED_FOREST] || saveFile.data.exploredForest);
+		flags[kFLAGS.TIMES_EXPLORED_DESERT]   = (flags[kFLAGS.TIMES_EXPLORED_DESERT] || saveFile.data.exploredDesert);
+		flags[kFLAGS.TIMES_EXPLORED]          = (flags[kFLAGS.TIMES_EXPLORED] || saveFile.data.exploredDesert);
+ 
+		flags[kFLAGS.JOJO_STATUS]        = (flags[kFLAGS.JOJO_STATUS] || saveFile.data.monk);
+		flags[kFLAGS.SANDWITCH_SERVICED] = (flags[kFLAGS.SANDWITCH_SERVICED] || saveFile.data.sand);
+		flags[kFLAGS.GIACOMO_MET]        = (flags[kFLAGS.GIACOMO_MET] || saveFile.data.giacomo);
+		
+		if (saveFile.data.beeProgress == 1)
+			game.forest.beeGirlScene.setTalked();
 			
 		kGAMECLASS.isabellaScene.isabellaOffspringData = [];
 		if (saveFile.data.isabellaOffspringData == undefined) {
